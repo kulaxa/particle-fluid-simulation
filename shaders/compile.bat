@@ -1,0 +1,2 @@
+glslc C:\Users\mario\source\repos\Rocket\shaders\simple_shader.vert -o C:\Users\mario\source\repos\Rocket\shaders\simple_shader.vert.spv
+glslc C:\Users\mario\source\repos\Rocket\shaders\simple_shader.frag -o C:\Users\mario\source\repos\Rocket\shaders\simple_shader.frag.spv
