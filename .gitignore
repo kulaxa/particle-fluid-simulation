@@ -488,6 +488,10 @@ CTestTestfile.cmake
 _deps
 .cmake
 
+.ninja*
+*.ninja
+
+
 # Executable
 rocket
 imgui.ini
