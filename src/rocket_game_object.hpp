@@ -53,21 +53,10 @@ namespace rocket {
 		glm::vec3 color{};
 		Transform2dComponent transform2d{};
 		bool gravityApplied = false;
-		bool collisionApplied = false;
 		float radius = 0.0f;
-		float touchingFloor = false;
 		RocketGameObjectType type = RocketGameObjectType::NONE;
-		float mass = 0.0f;
-		glm::vec2 velocity = glm::zero<glm::vec2>();
+        bool resolved = false;
 		glm::vec2 acceleration = glm::zero<glm::vec2>();
-		glm::vec2 total_force = glm::zero<glm::vec2>();
-        std::vector<glm::vec2> collision_transforms = {};
-        std::vector<glm::vec2> collision_velocities = {};
-        bool collision_resolved = false;
-        bool collided_with_x_wall = false;
-        bool collided_with_y_wall = false;
-        int num_of_frames_still = 0;
-        bool is_still = false;
         glm::vec2 last_position = glm::zero<glm::vec2>();
 
 	private:

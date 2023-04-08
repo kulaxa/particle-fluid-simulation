@@ -12,6 +12,8 @@
 #include "particle.hpp"
 #include "physics_system.hpp"
 #include <random>
+#include <csignal>
+
 namespace rocket {
 	static std::default_random_engine generator;
 	static float CIRCLE_RADIUS = 0.03f;
@@ -44,7 +46,7 @@ namespace rocket {
 
 				ImGui::Begin("Fps and slider!");                          // Create a window called "Hello, world!" and append into it.
 
-				
+
 				ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
 				ImGui::SliderInt("Number of particles to add", &i,1, 100);            // Edit 1 float using a slider from 0.0f to 1.0f
@@ -63,38 +65,47 @@ namespace rocket {
 				float mouseY = 2 * (ImGui::GetMousePos().y / HEIGHT - 0.5f);
 				//glm::vec2 testPaticlePosition = gameObjects[testBallPosition].transform2d.translation;
 				//float testPaticleRadius = gameObjects[testBallPosition].radius;
-				if (ImGui::IsMouseClicked(1)) {
-					
-					for (int j = 0; j < i; j++) {
-						createParticle({ mouseX, mouseY });
-						particleCounter++;
-					}
-				}
+//				if (ImGui::IsMouseClicked(1)) {
+//
+//					for (int j = 0; j < i; j++) {
+//						createParticle({ mouseX, mouseY });
+//						particleCounter++;
+//					}
+//				}
 				if (ImGui::IsMouseDown(0)) {
-					uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY);
+					uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
 					if (selectedParticle != -1) {
 						gameObjects[getParticleIndex(selectedParticle)].transform2d.translation = {mouseX, mouseY};
 
 					}
 				}
+
+                if (ImGui::IsMouseDown(1)) {
+                    uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.04f);
+                    if(selectedParticle == -1){
+                        particleCounter++;
+
+                        createParticle({mouseX, mouseY});
+                    }
+                }
 				ImGui::Text("counter = %d", particleCounter);
 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
-				uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY);
-				if (selectedParticle != -1) {
-					ImGui::Text("[Hover Particle Info] velocity (%.3f, %.3f) position (%.3f, %.3f) num of frames still %d",
-						gameObjects[getParticleIndex(selectedParticle)].velocity.x,
-						gameObjects[getParticleIndex(selectedParticle)].velocity.y,
-						gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.x,
-                        gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.y,
-                        gameObjects[getParticleIndex(selectedParticle)].num_of_frames_still
-
-
-
-                    );
-				}
-
+//				uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY);
+//				if (selectedParticle != -1) {
+//					ImGui::Text("[Hover Particle Info] velocity (%.3f, %.3f) position (%.3f, %.3f) num of frames still %d",
+////						gameObjects[getParticleIndex(selectedParticle)].velocity.x,
+////						gameObjects[getParticleIndex(selectedParticle)].velocity.y,
+//						gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.x,
+//                        gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.y,
+//                        gameObjects[getParticleIndex(selectedParticle)].num_of_frames_still
+//
+//
+//
+//                    );
+//				}
+//
 
 				ImGui::End();
 			}
@@ -140,16 +151,15 @@ namespace rocket {
 		RocketGameObject gameObject = RocketGameObject::createGameObject();
 		gameObject.model = circleModel;
 		gameObject.color = { colorDistribution(generator), colorDistribution(generator), colorDistribution(generator) };
-		gameObject.mass = 100.0f;
 		//gameObject.total_force = { 0.f, physicsSystem.getGravity().y * gameObject.mass };
 		gameObject.gravityApplied = true;
-		gameObject.collisionApplied = true;
 		gameObject.type = RocketGameObjectType::PARTICLE;
 		gameObject.radius = CIRCLE_RADIUS;
 		//gameObject.acceleration = { 0.0f, 3.f };
-		gameObject.transform2d.translation = {position.x + distribution(generator), position.y +distribution(generator)};
+//		gameObject.transform2d.translation = {position.x + distribution(generator), position.y +distribution(generator)};
+        gameObject.transform2d.translation = {position.x , position.y };
+
         gameObject.last_position= gameObject.transform2d.translation;
-//        gameObject.transform2d.translation = {position.x , position.y };
 
 		//gameObject.velocity = { distribution(generator),  distribution(generator) };
 		//gameObject.velocity = { 0.0f, 9.8f };
@@ -158,14 +168,14 @@ namespace rocket {
 		return gameObjects.size() - 1;
 	}
 
-	uint32_t TutorialApp::getSelectedParticle(float xMouse, float yMouse)
+	uint32_t TutorialApp::getSelectedParticle(float xMouse, float yMouse, float offset)
 	{
 		for (auto& particle : gameObjects) {
 			float xPart = particle.transform2d.translation.x;
 			float yPart = particle.transform2d.translation.y;
 
-			if (xMouse > xPart - particle.radius && xMouse < xPart + particle.radius &&
-				yMouse > yPart - particle.radius && yMouse < yPart + particle.radius) {
+			if (xMouse > xPart - particle.radius - offset && xMouse < xPart + particle.radius + offset &&
+				yMouse > yPart - particle.radius - offset && yMouse < yPart + particle.radius + offset) {
 				return particle.getId();
 			}
 		}

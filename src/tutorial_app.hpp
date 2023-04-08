@@ -33,7 +33,7 @@ namespace rocket {
 	private:
 		void loadGameObjects();
 		uint32_t createParticle(glm::vec2 position);
-		uint32_t getSelectedParticle(float xMouse, float yMouse);
+		uint32_t getSelectedParticle(float xMouse, float yMouse, float offset);
 		uint32_t getParticleIndex(uint32_t particleId);
 		void clearSimulation();
 		RocketWindow rocketWindow{ WIDTH, HEIGHT, "Rocket" };
