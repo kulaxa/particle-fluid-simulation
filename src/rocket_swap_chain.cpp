@@ -387,6 +387,7 @@ namespace rocket {
     // If mailbox is available use it, otherwise use FIFO (v-sync)
     VkPresentModeKHR RocketSwapChain::chooseSwapPresentMode(
         const std::vector<VkPresentModeKHR>& availablePresentModes) {
+
         for (const auto& availablePresentMode : availablePresentModes) {
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
                 std::cout << "Present mode: Mailbox" << std::endl;

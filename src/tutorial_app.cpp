@@ -83,11 +83,16 @@ namespace rocket {
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
 				uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY);
 				if (selectedParticle != -1) {
-					ImGui::Text("[Hover Particle Info] velocity (%.3f, %.3f) gravity applied (%s)",
+					ImGui::Text("[Hover Particle Info] velocity (%.3f, %.3f) position (%.3f, %.3f) num of frames still %d",
 						gameObjects[getParticleIndex(selectedParticle)].velocity.x,
 						gameObjects[getParticleIndex(selectedParticle)].velocity.y,
-						gameObjects[getParticleIndex(selectedParticle)].gravityApplied ? "true" : "false"
-					);
+						gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.x,
+                        gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.y,
+                        gameObjects[getParticleIndex(selectedParticle)].num_of_frames_still
+
+
+
+                    );
 				}
 
 
@@ -136,13 +141,15 @@ namespace rocket {
 		gameObject.model = circleModel;
 		gameObject.color = { colorDistribution(generator), colorDistribution(generator), colorDistribution(generator) };
 		gameObject.mass = 100.0f;
-		gameObject.total_force = { 0.f, physicsSystem.getGravity().y * gameObject.mass };
+		//gameObject.total_force = { 0.f, physicsSystem.getGravity().y * gameObject.mass };
 		gameObject.gravityApplied = true;
 		gameObject.collisionApplied = true;
 		gameObject.type = RocketGameObjectType::PARTICLE;
 		gameObject.radius = CIRCLE_RADIUS;
 		//gameObject.acceleration = { 0.0f, 3.f };
 		gameObject.transform2d.translation = {position.x + distribution(generator), position.y +distribution(generator)};
+        gameObject.last_position= gameObject.transform2d.translation;
+//        gameObject.transform2d.translation = {position.x , position.y };
 
 		//gameObject.velocity = { distribution(generator),  distribution(generator) };
 		//gameObject.velocity = { 0.0f, 9.8f };
