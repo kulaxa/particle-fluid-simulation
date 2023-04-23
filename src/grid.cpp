@@ -74,14 +74,19 @@ namespace  rocket {
 
     uint32_t Grid::resolveCollisionsBetweenTwoCells(std::vector<RocketGameObject> &gameObjects, int cell1, int cell2){
         uint32_t  collisions = 0;
+
         if(std::count(resolvedCells[cell1].begin(), resolvedCells[cell1].end(), cell2)){
             return -1;
         }
         if(std::count(resolvedCells[cell2].begin(), resolvedCells[cell2].end(), cell1)){
             return -1;
         }
-        for(int object1_id : grid[cell1]){
-            for(int object2_id : grid[cell2]){
+//        for(int object1_id : grid[cell1]){
+//            for(int object2_id : grid[cell2]){
+        for(int i = 0; i < grid[cell1].size(); i++){
+            for(int j = 0; j < grid[cell2].size(); j++){
+                int object1_id = grid[cell1][i];
+                int object2_id = grid[cell2][j];
                 if(object1_id != object2_id){
                     collisions++;
                     RocketGameObject &object1 = gameObjects[object1_id];

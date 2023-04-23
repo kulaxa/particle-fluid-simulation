@@ -13,6 +13,13 @@
 namespace rocket{
 
         class Grid {
+            struct Cell{
+                float velocity_x;
+                float velocity_y;
+                std::vector<uint32_t> objects;
+                std::vector<uint32_t> resolvedCells;
+
+            };
         public:
             Grid(){
                 this->grid_width = 1;
@@ -48,7 +55,7 @@ namespace rocket{
             int grid_height;
             std::vector<std::vector<uint32_t>> grid;
             std::vector<std::vector<uint32_t>> resolvedCells;
-
+//            std::vector<Cell> grid;
 //            void updateGrid(std::vector<RocketGameObject> &gameObjects);
         };
 }

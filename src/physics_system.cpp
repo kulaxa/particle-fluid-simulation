@@ -6,7 +6,7 @@
 
 namespace rocket {
     PhysicsSystem::PhysicsSystem(glm::vec2 gravity) : gravity(gravity) {
-        grid = Grid(45, 45);
+        grid = Grid(75, 75);
     }
 
     PhysicsSystem::~PhysicsSystem() {
@@ -16,27 +16,27 @@ namespace rocket {
 //        std::sort(gameObjects.begin(), gameObjects.end(), [](RocketGameObject &a, RocketGameObject &b) {
 //            return a.transform2d.translation.y < b.transform2d.translation.y;
 //        });
-        std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
+//        std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
 
         grid.updateGrid(gameObjects);
-        std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
-        debugInfo.update_grid_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
+//        std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
+//        debugInfo.update_grid_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
-        start_time = std::chrono::high_resolution_clock::now();
+//        start_time = std::chrono::high_resolution_clock::now();
         grid.resolveCollisionsWithWalls(gameObjects);
-        end_time = std::chrono::high_resolution_clock::now();
-        debugInfo.resolve_collisions_with_walls_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
+//        end_time = std::chrono::high_resolution_clock::now();
+//        debugInfo.resolve_collisions_with_walls_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
-        start_time = std::chrono::high_resolution_clock::now();
+//        start_time = std::chrono::high_resolution_clock::now();
         uint32_t  collision_count = grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
 
         collision_count += grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
 
-        debugInfo.collision_count = collision_count;
-        end_time = std::chrono::high_resolution_clock::now();
-        debugInfo.resolve_collisions_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
+//        debugInfo.collision_count = collision_count;
+//        end_time = std::chrono::high_resolution_clock::now();
+//        debugInfo.resolve_collisions_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
 
         for (auto &gameObject: gameObjects) {
