@@ -10,10 +10,10 @@ namespace  rocket {
         for (auto &gameObject: gameObjects) {
             uint32_t contained_cell = getContainedCell(gameObject);
             if(gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell){
-                grid[gameObject.gridPosition].erase(std::remove( grid[gameObject.gridPosition].begin(),  grid[gameObject.gridPosition].end(), gameObject.getId()),  grid[gameObject.gridPosition].end());
-                grid[contained_cell].push_back(gameObject.getId());
+                grid[gameObject.gridPosition].objects.erase(std::remove( grid[gameObject.gridPosition].objects.begin(),  grid[gameObject.gridPosition].objects.end(), gameObject.getId()),  grid[gameObject.gridPosition].objects.end());
+                grid[contained_cell].objects.push_back(gameObject.getId());
             } else if(gameObject.gridPosition == -1){
-                grid[contained_cell].push_back(gameObject.getId());
+                grid[contained_cell].objects.push_back(gameObject.getId());
             }
             gameObject.gridPosition = contained_cell;
         }
@@ -41,7 +41,7 @@ namespace  rocket {
     uint32_t Grid::resolveCollisions(std::vector<RocketGameObject> &gameObjects) {
         uint32_t collisions = 0;
         for(int i = 0; i < grid.size(); i++){
-            if(grid[i].size() > 0)
+            if(grid[i].objects.size() > 0)
                 collisions +=resolveCollisionInCell(gameObjects, i);
         }
         return collisions;
@@ -55,12 +55,12 @@ namespace  rocket {
             for(int j = -1; j < 2; j++){
                 if((cellX +i) >= 0 && cellX + i < grid_width && cellY + j >= 0 && cellY + j < grid_height){
                     int cell_index = (cellY + j) * grid_height + (cellX + i);
-                    if(grid[cell_index].size() > 0){
+                    if(grid[cell_index].objects.size() > 0){
                         uint32_t result = resolveCollisionsBetweenTwoCells(gameObjects, cell, cell_index);
                         if(result != -1){
                             collisions += result;
-                            resolvedCells[cell].push_back(cell_index);
-                            resolvedCells[cell_index].push_back(cell);
+                            grid[cell].resolvedCells.push_back(cell_index);
+                            grid[cell_index].resolvedCells.push_back(cell);
                         }
 
 
@@ -75,18 +75,18 @@ namespace  rocket {
     uint32_t Grid::resolveCollisionsBetweenTwoCells(std::vector<RocketGameObject> &gameObjects, int cell1, int cell2){
         uint32_t  collisions = 0;
 
-        if(std::count(resolvedCells[cell1].begin(), resolvedCells[cell1].end(), cell2)){
+        if(std::count(grid[cell1].resolvedCells.begin(), grid[cell1].resolvedCells.end(), cell2)){
             return -1;
         }
-        if(std::count(resolvedCells[cell2].begin(), resolvedCells[cell2].end(), cell1)){
+        if(std::count(grid[cell2].resolvedCells.begin(), grid[cell2].resolvedCells.end(), cell1)){
             return -1;
         }
 //        for(int object1_id : grid[cell1]){
 //            for(int object2_id : grid[cell2]){
-        for(int i = 0; i < grid[cell1].size(); i++){
-            for(int j = 0; j < grid[cell2].size(); j++){
-                int object1_id = grid[cell1][i];
-                int object2_id = grid[cell2][j];
+        for(int i = 0; i < grid[cell1].objects.size(); i++){
+            for(int j = 0; j < grid[cell2].objects.size(); j++){
+                int object1_id = grid[cell1].objects[i];
+                int object2_id = grid[cell2].objects[j];
                 if(object1_id != object2_id){
                     collisions++;
                     RocketGameObject &object1 = gameObjects[object1_id];
@@ -115,8 +115,8 @@ namespace  rocket {
     void Grid::printGrid(){
         for(int i = 0; i < grid.size(); i++){
             std::cout << "Cell " << i << ": ";
-            for(int j = 0; j < grid[i].size(); j++){
-                std::cout << grid[i][j] << " ";
+            for(int j = 0; j < grid[i].objects.size(); j++){
+                std::cout << grid[i].objects[j] << " ";
             }
             std::cout << std::endl;
         }
@@ -127,8 +127,8 @@ namespace  rocket {
         float total = 0;
         float count = 0;
         for(int i = 0; i < grid.size(); i++){
-            if(grid[i].size() > 0) {
-                total += grid[i].size();
+            if(grid[i].objects.size() > 0) {
+                total += grid[i].objects.size();
                 count++;
             }
         }
@@ -138,7 +138,7 @@ namespace  rocket {
     uint32_t Grid::getFilledCellCount(){
         uint32_t count = 0;
         for(int i = 0; i < grid.size(); i++){
-            if(grid[i].size() > 0) {
+            if(grid[i].objects.size() > 0) {
                 count++;
             }
         }
@@ -173,7 +173,7 @@ namespace  rocket {
     }
 
     uint32_t Grid::resolveCollisionsBetweenCellAndWalls(std::vector<RocketGameObject> &gameObjects, int cell, int direction) { // 0 - top, 1 - right, 2 - bottom, 3 - left
-        for(int object_id: grid[cell]){
+        for(int object_id: grid[cell].objects){
             RocketGameObject& gameObject = gameObjects[object_id];
 
             float radius = gameObject.radius;
@@ -213,8 +213,8 @@ namespace  rocket {
 
 
     void Grid::clearResolvedCells() {
-        for (int i = 0; i < resolvedCells.size(); i++) {
-            resolvedCells[i].clear();
+        for (int i = 0; i < grid.size(); i++) {
+            grid[i].resolvedCells.clear();
         }
     }
 

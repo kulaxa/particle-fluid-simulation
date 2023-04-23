@@ -24,14 +24,20 @@ namespace rocket{
             Grid(){
                 this->grid_width = 1;
                 this->grid_height = 1;
-                grid = std::vector<std::vector<uint32_t>>(grid_height * grid_width, std::vector<uint32_t>());
-                resolvedCells = std::vector<std::vector<uint32_t>>(grid_height * grid_width, std::vector<uint32_t>());
+                grid = std::vector<Cell>(grid_height * grid_width);
+                for(int i = 0; i < grid.size(); i++){
+                    grid[i].objects = std::vector<uint32_t>();
+                    grid[i].resolvedCells = std::vector<uint32_t>();
+                }
             }
             Grid(int width, int height){
                 this->grid_width = width;
                 this->grid_height = height;
-                grid = std::vector<std::vector<uint32_t>>(grid_height * grid_width, std::vector<uint32_t>());
-                resolvedCells = std::vector<std::vector<uint32_t>>(grid_height * grid_width, std::vector<uint32_t>());
+                grid = std::vector<Cell>(grid_height * grid_width);
+                for(int i = 0; i < grid.size(); i++){
+                    grid[i].objects = std::vector<uint32_t>();
+                    grid[i].resolvedCells = std::vector<uint32_t>();
+                }
 
             };
             ~Grid() {};
@@ -53,9 +59,9 @@ namespace rocket{
         private:
             int grid_width;
             int grid_height;
-            std::vector<std::vector<uint32_t>> grid;
-            std::vector<std::vector<uint32_t>> resolvedCells;
-//            std::vector<Cell> grid;
+//            std::vector<std::vector<uint32_t>> grid;
+//            std::vector<std::vector<uint32_t>> resolvedCells;
+            std::vector<Cell> grid;
 //            void updateGrid(std::vector<RocketGameObject> &gameObjects);
         };
 }
