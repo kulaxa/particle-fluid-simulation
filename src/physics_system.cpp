@@ -2,35 +2,54 @@
 #include <iostream>
 #include <numeric>
 #include <algorithm>
+#include <chrono>
 
 namespace rocket {
     PhysicsSystem::PhysicsSystem(glm::vec2 gravity) : gravity(gravity) {
-
+        grid = Grid(45, 45);
     }
 
     PhysicsSystem::~PhysicsSystem() {
     }
 
     void PhysicsSystem::updatePhysics(float deltaTime, std::vector<RocketGameObject> &gameObjects) {
-        std::sort(gameObjects.begin(), gameObjects.end(), [](RocketGameObject &a, RocketGameObject &b) {
-            return a.transform2d.translation.y < b.transform2d.translation.y;
-        });
+//        std::sort(gameObjects.begin(), gameObjects.end(), [](RocketGameObject &a, RocketGameObject &b) {
+//            return a.transform2d.translation.y < b.transform2d.translation.y;
+//        });
+        std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
+
+        grid.updateGrid(gameObjects);
+        std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
+        debugInfo.update_grid_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
+
+        start_time = std::chrono::high_resolution_clock::now();
+        grid.resolveCollisionsWithWalls(gameObjects);
+        end_time = std::chrono::high_resolution_clock::now();
+        debugInfo.resolve_collisions_with_walls_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
+
+        start_time = std::chrono::high_resolution_clock::now();
+        uint32_t  collision_count = grid.resolveCollisions(gameObjects);
+        grid.clearResolvedCells();
+
+        collision_count += grid.resolveCollisions(gameObjects);
+        grid.clearResolvedCells();
+
+        debugInfo.collision_count = collision_count;
+        end_time = std::chrono::high_resolution_clock::now();
+        debugInfo.resolve_collisions_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
+
+
         for (auto &gameObject: gameObjects) {
             if (gameObject.gravityApplied) {
-                gameObject.acceleration += gravity * 0.01f;
+                gameObject.acceleration += gravity * 0.001f;
             }
             gameObject.transform2d.translation += gameObject.acceleration * deltaTime;
-//            resolveCollisionWithOuterWalls(gameObject, deltaTime);
-//            resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
-            resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
-
-            resolveCollisionWithOuterWalls(gameObject, deltaTime);
+//            auto collisions = resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
+//            std::cout << "Collisions: " << collisions << std::endl;
 
 
 //            resolveCollisionWithOuterWalls(gameObject, deltaTime);
-//            resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
-//            resolveCollisionWithOuterWalls(gameObject, deltaTime);
-//            resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
+
 
             glm::vec2 position = gameObject.transform2d.translation;
             glm::vec2 last_position = gameObject.last_position;
@@ -69,11 +88,13 @@ namespace rocket {
 
     }
 
-    void PhysicsSystem::resolveCollisionWithOtherParticles(RocketGameObject &gameObject,
+    uint32_t PhysicsSystem::resolveCollisionWithOtherParticles(RocketGameObject &gameObject,
                                                            std::vector<RocketGameObject> &gameObjects,
                                                            float deltaTime) {
+        uint32_t collisions = 0;
         for (auto &particle: gameObjects) {
 
+            collisions++;
             constexpr float response_coef = 1.1f;
             constexpr float eps = 0.0001f;
             const glm::vec2 o2_o1 = gameObject.transform2d.translation - particle.transform2d.translation;
@@ -86,11 +107,16 @@ namespace rocket {
                 const glm::vec2 col_vec = (o2_o1 / dist) * delta;
                     gameObject.transform2d.translation += col_vec;
                     particle.transform2d.translation -= col_vec;
-
-
-//                gameObject.transform2d.translation += col_vec;
-//                particle.transform2d.translation -= col_vec;
             }
         }
+        return collisions;
+
+    }
+
+
+    DebugInfo PhysicsSystem::getDebugInfo() {
+        debugInfo.averageCellObjectCount = grid.getAverageCellObjectCount();
+        debugInfo.filledCellCount = grid.getFilledCellCount();
+        return debugInfo;
     }
 }

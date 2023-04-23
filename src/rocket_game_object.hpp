@@ -55,9 +55,9 @@ namespace rocket {
 		bool gravityApplied = false;
 		float radius = 0.0f;
 		RocketGameObjectType type = RocketGameObjectType::NONE;
-        bool resolved = false;
 		glm::vec2 acceleration = glm::zero<glm::vec2>();
         glm::vec2 last_position = glm::zero<glm::vec2>();
+        uint32_t gridPosition = -1;
 
 	private:
 		RocketGameObject(id_t objId) : id{ objId } {}

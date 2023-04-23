@@ -16,7 +16,7 @@
 
 namespace rocket {
 	static std::default_random_engine generator;
-	static float CIRCLE_RADIUS = 0.03f;
+	static float CIRCLE_RADIUS = 0.010f;
 	TutorialApp::TutorialApp()
 	{
 		loadGameObjects();
@@ -52,7 +52,6 @@ namespace rocket {
 				ImGui::SliderInt("Number of particles to add", &i,1, 100);            // Edit 1 float using a slider from 0.0f to 1.0f
 
 				if (ImGui::SliderFloat("Particle radius", &CIRCLE_RADIUS, 0.0f, 0.1f)) {
-					std::cout << "SLIDER MOVED" << std::endl;
 					loadGameObjects();
 				}
 					// Edit 1 float using a slider from 0.0f to 1.0f
@@ -63,15 +62,7 @@ namespace rocket {
 				}                        // Buttons return true when clicked (most widgets return true when edited/activated)
 				float mouseX = 2 * (ImGui::GetMousePos().x / WIDTH - 0.5f);
 				float mouseY = 2 * (ImGui::GetMousePos().y / HEIGHT - 0.5f);
-				//glm::vec2 testPaticlePosition = gameObjects[testBallPosition].transform2d.translation;
-				//float testPaticleRadius = gameObjects[testBallPosition].radius;
-//				if (ImGui::IsMouseClicked(1)) {
-//
-//					for (int j = 0; j < i; j++) {
-//						createParticle({ mouseX, mouseY });
-//						particleCounter++;
-//					}
-//				}
+
 				if (ImGui::IsMouseDown(0)) {
 					uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
 					if (selectedParticle != -1) {
@@ -81,33 +72,40 @@ namespace rocket {
 				}
 
                 if (ImGui::IsMouseDown(1)) {
-                    uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.04f);
+                    uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.02f);
                     if(selectedParticle == -1){
-                        particleCounter++;
+                        particleCounter+=i;
 
-                        createParticle({mouseX, mouseY});
+//                        createParticle({mouseX, mouseY});
+                        createMultipleParticles({mouseX, mouseY}, i);
                     }
                 }
 				ImGui::Text("counter = %d", particleCounter);
 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
-//				uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY);
-//				if (selectedParticle != -1) {
-//					ImGui::Text("[Hover Particle Info] velocity (%.3f, %.3f) position (%.3f, %.3f) num of frames still %d",
-////						gameObjects[getParticleIndex(selectedParticle)].velocity.x,
-////						gameObjects[getParticleIndex(selectedParticle)].velocity.y,
+				uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
+				if (selectedParticle != -1) {
+//					ImGui::Text("[Hover Particle Info] position (%.3f, %.3f) gridPosition %d, id %d",
+//						gameObjects[getParticleIndex(selectedParticle)].velocity.x,
+//						gameObjects[getParticleIndex(selectedParticle)].velocity.y,
 //						gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.x,
 //                        gameObjects[getParticleIndex(selectedParticle)].transform2d.translation.y,
-//                        gameObjects[getParticleIndex(selectedParticle)].num_of_frames_still
-//
-//
-//
-//                    );
-//				}
-//
+//                        gameObjects[getParticleIndex(selectedParticle)].gridPosition,
+//                        gameObjects[getParticleIndex(selectedParticle)].getId()
 
-				ImGui::End();
+//                    );
+				}
+                DebugInfo debugInfo = physicsSystem.getDebugInfo();
+                ImGui::Text("Average number of particles in a cell: %f, number of occupied cells %d", debugInfo.averageCellObjectCount, debugInfo.filledCellCount /1000);
+                ImGui::Text("Time to update grid %d us", debugInfo.update_grid_duration);
+                ImGui::Text("Time to resolve collision %d us", debugInfo.resolve_collisions_duration);
+
+                ImGui::Text("Time to resolve wall collisions %d us", debugInfo.resolve_collisions_with_walls_duration);
+                ImGui::Text("Collision count: %d", debugInfo.collision_count);
+
+
+                ImGui::End();
 			}
 
 			// Imgui render
@@ -197,6 +195,17 @@ namespace rocket {
 	{
 		gameObjects.clear();
 	}
+
+    uint32_t TutorialApp::createMultipleParticles(glm::vec2 position, int count){
+//        std::uniform_real_distribution<double> distribution(-0.1, 0.1);
+//
+//        glm::vec2 pos =  {position.x + distribution(generator), position.y +distribution(generator)};
+        createParticle(position);
+        for (int i = 0; i < count-1; i++) {
+            createParticle({position.x, position.y - i*0.05f});
+        }
+        return gameObjects.size() - 1;
+    }
 
 
 }
