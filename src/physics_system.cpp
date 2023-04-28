@@ -34,6 +34,9 @@ namespace rocket {
         collision_count += grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
 
+        grid.transferVelocities(gameObjects, true, 0.5f);
+        grid.updateParticleDensity();
+        grid.solveIncompressibility()
 //        debugInfo.collision_count = collision_count;
 //        end_time = std::chrono::high_resolution_clock::now();
 //        debugInfo.resolve_collisions_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);

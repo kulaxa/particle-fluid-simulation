@@ -4,6 +4,7 @@
 #include <chrono>
 #include "particle.hpp"
 #include "grid.h"
+#include "physics_system.hpp"
 
 namespace rocket {
     struct DebugInfo{
