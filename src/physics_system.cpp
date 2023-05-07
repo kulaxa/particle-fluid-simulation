@@ -6,7 +6,7 @@
 
 namespace rocket {
     PhysicsSystem::PhysicsSystem(glm::vec2 gravity) : gravity(gravity) {
-        grid = Grid(10, 10);
+        grid = Grid(8, 8);
     }
 
     PhysicsSystem::~PhysicsSystem() {
@@ -34,20 +34,21 @@ namespace rocket {
         collision_count += grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
 
-
-        grid.updatePositionsFromObjectToGrid(gameObjects);
 //
-        grid.transferVelocities(gameObjects, true, 0.5f);
-        grid.updateParticleDensity();
-        grid.solveIncompressibility(1, deltaTime, 0.85);
-//        debugInfo.collision_count = collision_count;
-//        end_time = std::chrono::high_resolution_clock::now();
-//        debugInfo.resolve_collisions_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
-        grid.updatePositionsFromGridToObject(gameObjects);
-
+//        grid.updatePositionsFromObjectToGrid(gameObjects);
+//        grid.updateObstacleCellsToSolid(gameObjects);
+//
+//        grid.transferVelocities(true, 0.65f);
+//        grid.updateParticleDensity();
+//        grid.solveIncompressibility(1, deltaTime, 0.85);
+//        grid.updatePositionsFromGridToObject(gameObjects);
+//        grid.updateObstacleCellsToAir(gameObjects);
         for (auto &gameObject: gameObjects) {
             if (gameObject.gravityApplied) {
                 gameObject.acceleration += gravity * 0.001f;
+            }
+            if(gameObject.type == rocket::RocketGameObjectType::OBSTACLE) {
+                gameObject.obstacleGridPositions.clear();
             }
             gameObject.transform2d.translation += gameObject.acceleration * deltaTime;
 //            auto collisions = resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);

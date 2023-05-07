@@ -16,8 +16,8 @@
 
 namespace rocket {
 	static std::default_random_engine generator;
-	static float CIRCLE_RADIUS = 0.010f;
-    static float OBSTACLE_RADIUS = 0.3f;
+	static float CIRCLE_RADIUS = 0.015f;
+    static float OBSTACLE_RADIUS = 0.2f;
 	TutorialApp::TutorialApp()
 	{
 		loadGameObjects();
@@ -83,8 +83,8 @@ namespace rocket {
                     if(selectedParticle == -1){
                         particleCounter+=i;
 
-//                        createParticle({mouseX, mouseY});
                         createMultipleParticles({mouseX, mouseY}, i);
+                        std::cout << i << " Particle created" << std::endl;
                     }
                 }
 				ImGui::Text("counter = %d", particleCounter);
@@ -93,6 +93,7 @@ namespace rocket {
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
 				uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
 				if (selectedParticle != -1) {
+                    ImGui::Text("[Obstacle grid position] lastPosition %d, number of gridCells %d", gameObjects[getParticleIndex(selectedParticle)].gridPosition, gameObjects[getParticleIndex(selectedParticle)].obstacleGridPositions.size());
 //					ImGui::Text("[Hover Particle Info] position (%.3f, %.3f) gridPosition %d, id %d",
 //						gameObjects[getParticleIndex(selectedParticle)].velocity.x,
 //						gameObjects[getParticleIndex(selectedParticle)].velocity.y,
@@ -172,7 +173,7 @@ namespace rocket {
 		//gameObject.velocity = { distribution(generator),  distribution(generator) };
 		//gameObject.velocity = { 0.0f, 9.8f };
 		gameObjects.push_back(std::move(gameObject));
-        physicsSystem.setParticleCountGrid(gameObjects.size());
+        physicsSystem.setParticleCountGrid(gameObjects.size()-1);
 		//return std::make_unique<RocketGameObject>(gameObjects.back());
 		return gameObjects.size() - 1;
 	}
@@ -226,7 +227,7 @@ namespace rocket {
         gameObject.color = { colorDistribution(generator), colorDistribution(generator), colorDistribution(generator) };
         //gameObject.total_force = { 0.f, physicsSystem.getGravity().y * gameObject.mass };
         gameObject.type = RocketGameObjectType::OBSTACLE;
-        gameObject.radius = 0.3f;
+        gameObject.radius = 0.2f;
         //gameObject.acceleration = { 0.0f, 3.f };
 //		gameObject.transform2d.translation = {position.x + distribution(generator), position.y +distribution(generator)};
         gameObject.transform2d.translation = {position.x , position.y };

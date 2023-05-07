@@ -179,13 +179,18 @@ namespace rocket{
         uint32_t getFilledCellCount();
         void clearResolvedCells();
         void solveIncompressibility(int numIters, float dt,float overRelaxation, bool compensateDrift = true);
+        void updateObstacleCellsToSolid(std::vector<RocketGameObject> &gameObjects);
+        void updateObstacleCellsToAir(std::vector<RocketGameObject> &gameObjects);
+
         void updateParticleDensity();
         void updatePositionsFromGridToObject(std::vector<RocketGameObject> &gameObjects);
         void updatePositionsFromObjectToGrid(std::vector<RocketGameObject> &gameObjects);
         void setParticleCount(int count){ numParticles = count; };
+        std::vector<int> getContainedCellsForObstacle(RocketGameObject &gameObject);
 
 
-        void transferVelocities(std::vector<RocketGameObject>& gameObjects,bool toGrid,float flipRatio);
+
+            void transferVelocities(bool toGrid,float flipRatio);
         void printGrid();
         std::vector<Cell> getGrid();
         int getGridWidth(){
@@ -203,7 +208,7 @@ namespace rocket{
         float density = 1000.f;
         float tankWidth = 2.f;
         float tankHeight = 2.f;
-        float r = 0.010f;
+        float r = 0.015f;
         float fNumX;
         float fNumY ;
         float h ;
@@ -246,5 +251,6 @@ namespace rocket{
         std::vector<int> cellParticleIds ;
 
         int numParticles = 0;
+        int numOfObstacles = 1 ;// hardcoded for now
         };
 }

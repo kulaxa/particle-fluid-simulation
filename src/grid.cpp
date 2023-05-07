@@ -8,6 +8,22 @@
 namespace  rocket {
     void Grid::updateGrid(std::vector<RocketGameObject> &gameObjects) {
         for (auto &gameObject: gameObjects) {
+            if(gameObject.type == RocketGameObjectType::OBSTACLE) {
+                for(auto &contained_cell: getContainedCellsForObstacle(gameObject)) {
+                    if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
+                        grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
+                                                                                grid[gameObject.gridPosition].objects.end(),
+                                                                                gameObject.getId()),
+                                                                    grid[gameObject.gridPosition].objects.end());
+                        grid[contained_cell].objects.push_back(gameObject.getId());
+                    } else if (gameObject.gridPosition == -1) {
+                        grid[contained_cell].objects.push_back(gameObject.getId());
+                    }
+                    gameObject.gridPosition = contained_cell;
+                    gameObject.obstacleGridPositions.push_back(contained_cell);
+                }
+                continue;
+            }
             uint32_t contained_cell = getContainedCell(gameObject);
             if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
                 grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
@@ -40,6 +56,33 @@ namespace  rocket {
 
         return cell_index;
     }
+
+    std::vector<int> Grid::getContainedCellsForObstacle(RocketGameObject &gameObject) {
+        float x = gameObject.transform2d.translation.x;
+        float y = gameObject.transform2d.translation.y;
+        float R = gameObject.radius;
+        int xMin = std::max(0, static_cast<int>(std::floor((x - R + 1) * grid_width / 2)));
+        int yMin = std::max(0, static_cast<int>(std::floor((y - R + 1) * grid_height / 2)));
+        int xMax = std::min(grid_width - 1, static_cast<int>(std::floor((x + R + 1) * grid_width / 2)));
+        int yMax = std::min(grid_height - 1, static_cast<int>(std::floor((y + R + 1) * grid_height / 2)));
+
+        // Add all cells in the bounding box that are fully or partially covered by the ball
+        std::vector<int> cellsContainingBall = std::vector<int>();
+        for (int xIndex = xMin; xIndex <= xMax; ++xIndex) {
+            for (int yIndex = yMin; yIndex <= yMax; ++yIndex) {
+                double cellCenterX = (xIndex + 0.5) * 2.0 / grid_width - 1.0;
+                double cellCenterY = (yIndex + 0.5) * 2.0 / grid_height - 1.0;
+                double distance = std::sqrt((x - cellCenterX) * (x - cellCenterX) + (y - cellCenterY) * (y - cellCenterY));
+                if (distance <= R) {
+                    cellsContainingBall.push_back(xIndex +yIndex * grid_width);
+                }
+            }
+        }
+
+        return cellsContainingBall;
+    }
+
+
 
     uint32_t Grid::resolveCollisions(std::vector<RocketGameObject> &gameObjects) {
         uint32_t collisions = 0;
@@ -95,7 +138,8 @@ namespace  rocket {
                     RocketGameObject &object1 = gameObjects[object1_id];
                     RocketGameObject &object2 = gameObjects[object2_id];
 
-                    constexpr float response_coef = 1.00f;
+
+                    constexpr float response_coef = 1.0f;
                     constexpr float eps = 0.0001f;
                     const glm::vec2 o2_o1 = object1.transform2d.translation - object2.transform2d.translation;
                     const float dist2 = o2_o1.x * o2_o1.x + o2_o1.y * o2_o1.y;
@@ -105,6 +149,14 @@ namespace  rocket {
                         // Radius are all equal to 1.0f
                         const float delta = response_coef * 0.5f * (object1.radius + object2.radius - dist);
                         const glm::vec2 col_vec = (o2_o1 / dist) * delta;
+                        if(object1.type == rocket::RocketGameObjectType::OBSTACLE){
+                            object2.transform2d.translation -=1.f* col_vec;
+                            continue;
+                        }
+                        if(object2.type == rocket::RocketGameObjectType::OBSTACLE){
+                            object1.transform2d.translation += 1.f*col_vec;
+                            continue;
+                        }
                         object1.transform2d.translation += col_vec;
                         object2.transform2d.translation -= col_vec;
                     }
@@ -149,6 +201,7 @@ namespace  rocket {
     }
 
     uint32_t Grid::resolveCollisionsWithWalls(std::vector<RocketGameObject> &gameObjects) {
+
         uint32_t collisions = 0;
 //        collisions+= resolveCollisionsBetweenCellAndWalls(gameObjects, 0, 3); // left
 //        collisions+= resolveCollisionsBetweenCellAndWalls(gameObjects, grid_width - 1, 1); // right
@@ -178,6 +231,9 @@ namespace  rocket {
         for (int object_id: grid[cell].objects) {
             RocketGameObject &gameObject = gameObjects[object_id];
 
+            if(gameObject.type == RocketGameObjectType::OBSTACLE) {
+                continue;
+            }
             float radius = gameObject.radius;
             float margin = 0.001f;
             glm::vec2 center = gameObject.transform2d.translation;
@@ -218,10 +274,11 @@ namespace  rocket {
         for (int i = 0; i < grid.size(); i++) {
             grid[i].resolvedCells.clear();
         }
+
     }
 
 
-    void Grid::transferVelocities(std::vector<RocketGameObject> &gameObjects, bool toGrid, float flipRatio) {
+    void Grid::transferVelocities( bool toGrid, float flipRatio) {
         auto n = fNumY;
         auto h1 = fInvSpacing;
         auto h2 = 0.5 * h;
@@ -467,23 +524,61 @@ namespace  rocket {
 
 
     void Grid::updatePositionsFromGridToObject(std::vector<RocketGameObject> &gameObjects){
-        for(int i =0; i< gameObjects.size(); i++){
-            gameObjects[i].transform2d.translation.x = particlePos[2*i];
-            gameObjects[i].transform2d.translation.y = particlePos[2*i+1];
+        for(int i =0 ,  particleIndex = 0; i< gameObjects.size(); i++,  particleIndex++){
+            if(gameObjects[i].type == rocket::RocketGameObjectType::OBSTACLE) {
+                particleIndex--;
+                continue;
+            }
+            gameObjects[i].transform2d.translation.x = particlePos[2*particleIndex];
+            gameObjects[i].transform2d.translation.y = particlePos[2*particleIndex+1];
         }
     }
 
     void Grid::updatePositionsFromObjectToGrid(std::vector<RocketGameObject> &gameObjects){
-        if(maxParticles != gameObjects.size()){
-            maxParticles = gameObjects.size();
+        if(maxParticles != gameObjects.size() - numOfObstacles){
+            maxParticles = gameObjects.size() - numOfObstacles;
             particlePos = std::vector<float>(2 * maxParticles);
         }
 
-        for(int i =0; i< gameObjects.size(); i++){
-            particlePos[2*i] = gameObjects[i].transform2d.translation.x;
-            particlePos[2*i+1] = gameObjects[i].transform2d.translation.y;
+        for(int i =0 , particleIndex = 0; i< gameObjects.size(); i++ , particleIndex++){
+            if(gameObjects[i].type == rocket::RocketGameObjectType::OBSTACLE) {
+                particleIndex--;
+                continue;
+            }
+            particlePos[2*particleIndex] = gameObjects[i].transform2d.translation.x;
+            particlePos[2*particleIndex+1] = gameObjects[i].transform2d.translation.y;
         }
     }
+
+
+    void Grid::updateObstacleCellsToSolid(std::vector<RocketGameObject> &gameObjects) {
+        for (auto &gameObject: gameObjects) {
+            if (gameObject.type != rocket::RocketGameObjectType::OBSTACLE) {
+                std::vector<int> obstacleCells = getContainedCellsForObstacle(gameObject);
+
+                for (int i = 0; i < obstacleCells.size(); i++) {
+                    cellType[obstacleCells[i]] = CellType::SOLID_CELL;
+                }
+
+            }
+
+
+        }
+    }
+
+    void Grid::updateObstacleCellsToAir(std::vector<RocketGameObject> & gameObjects){
+        for(auto & gameObject : gameObjects){
+            if(gameObject.type != rocket::RocketGameObjectType::OBSTACLE) {
+
+                std::vector<int> obstacleCells = getContainedCellsForObstacle(gameObject);
+
+                for (int i = 0; i < obstacleCells.size(); i++) {
+                    cellType[obstacleCells[i]] = CellType::AIR_CELL;
+                }
+            }
+            }
+    }
+
 
 
 
