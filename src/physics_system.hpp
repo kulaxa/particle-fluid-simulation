@@ -29,6 +29,8 @@ namespace rocket {
 
 		uint32_t resolveCollisionWithOtherParticles(RocketGameObject& gameObject, std::vector<RocketGameObject>& gameObjects, float deltaTime);
 
+        void setParticleCountGrid(int particleCount) { grid.setParticleCount(particleCount);}
+
         DebugInfo getDebugInfo();
 
 

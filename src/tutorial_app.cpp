@@ -17,6 +17,7 @@
 namespace rocket {
 	static std::default_random_engine generator;
 	static float CIRCLE_RADIUS = 0.010f;
+    static float OBSTACLE_RADIUS = 0.3f;
 	TutorialApp::TutorialApp()
 	{
 		loadGameObjects();
@@ -62,6 +63,12 @@ namespace rocket {
 				}                        // Buttons return true when clicked (most widgets return true when edited/activated)
 				float mouseX = 2 * (ImGui::GetMousePos().x / WIDTH - 0.5f);
 				float mouseY = 2 * (ImGui::GetMousePos().y / HEIGHT - 0.5f);
+
+                if(!obstacleCreated){
+                    createObstacle({0.0f, 0.0f});
+                    std::cout << "Obstacle created" << std::endl;
+                    obstacleCreated = true;
+                }
 
 				if (ImGui::IsMouseDown(0)) {
 					uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
@@ -137,7 +144,10 @@ namespace rocket {
 	{
 
 		auto verticies = Particle::createParticleVerticies(CIRCLE_RADIUS, {0.0f, 0.0f});
-		circleModel = std::make_shared<RocketModel>(rocketDevice, verticies);
+        auto obstacleVerticies = Particle::createParticleVerticies(OBSTACLE_RADIUS, {0.0f, 0.0f});
+
+        circleModel = std::make_shared<RocketModel>(rocketDevice, verticies);
+        obstacleModel = std::make_shared<RocketModel>(rocketDevice, obstacleVerticies);
 		
 	}
 
@@ -162,6 +172,7 @@ namespace rocket {
 		//gameObject.velocity = { distribution(generator),  distribution(generator) };
 		//gameObject.velocity = { 0.0f, 9.8f };
 		gameObjects.push_back(std::move(gameObject));
+        physicsSystem.setParticleCountGrid(gameObjects.size());
 		//return std::make_unique<RocketGameObject>(gameObjects.back());
 		return gameObjects.size() - 1;
 	}
@@ -206,6 +217,30 @@ namespace rocket {
         }
         return gameObjects.size() - 1;
     }
+
+
+    uint32_t TutorialApp::createObstacle(glm::vec2 position){
+        std::uniform_real_distribution<double> colorDistribution(0, 1);
+        RocketGameObject gameObject = RocketGameObject::createGameObject();
+        gameObject.model = obstacleModel;
+        gameObject.color = { colorDistribution(generator), colorDistribution(generator), colorDistribution(generator) };
+        //gameObject.total_force = { 0.f, physicsSystem.getGravity().y * gameObject.mass };
+        gameObject.type = RocketGameObjectType::OBSTACLE;
+        gameObject.radius = 0.3f;
+        //gameObject.acceleration = { 0.0f, 3.f };
+//		gameObject.transform2d.translation = {position.x + distribution(generator), position.y +distribution(generator)};
+        gameObject.transform2d.translation = {position.x , position.y };
+
+        gameObject.last_position= gameObject.transform2d.translation;
+
+        //gameObject.velocity = { distribution(generator),  distribution(generator) };
+        //gameObject.velocity = { 0.0f, 9.8f };
+        gameObjects.push_back(std::move(gameObject));
+//        physicsSystem.setParticleCountGrid(gameObjects.size());
+        //return std::make_unique<RocketGameObject>(gameObjects.back());
+        return gameObjects.size() - 1;
+    }
+
 
 
 }

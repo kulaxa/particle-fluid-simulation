@@ -6,7 +6,7 @@
 
 namespace rocket {
     PhysicsSystem::PhysicsSystem(glm::vec2 gravity) : gravity(gravity) {
-//        grid = Grid(75, 75);
+        grid = Grid(10, 10);
     }
 
     PhysicsSystem::~PhysicsSystem() {
@@ -34,13 +34,16 @@ namespace rocket {
         collision_count += grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
 
+
+        grid.updatePositionsFromObjectToGrid(gameObjects);
+//
         grid.transferVelocities(gameObjects, true, 0.5f);
         grid.updateParticleDensity();
         grid.solveIncompressibility(1, deltaTime, 0.85);
 //        debugInfo.collision_count = collision_count;
 //        end_time = std::chrono::high_resolution_clock::now();
 //        debugInfo.resolve_collisions_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
-
+        grid.updatePositionsFromGridToObject(gameObjects);
 
         for (auto &gameObject: gameObjects) {
             if (gameObject.gravityApplied) {

@@ -261,11 +261,12 @@ namespace  rocket {
             auto d = component == 0 ? du : dv;
 
             for (auto i = 0; i < numParticles; i++) {
-                auto x = particlePos[2 * i];
-                auto y = particlePos[2 * i + 1];
+                float x = particlePos[2 * i];
+                float y = particlePos[2 * i + 1];
 
-                x = std::clamp<int>(x, h, (fNumX - 1) * h);
-                y = std::clamp<int>(y, h, (fNumY - 1) * h);
+                x = std::clamp<float>(x, h, (fNumX - 1) * h);
+                y = std::clamp<float>(y, h, (fNumY - 1) * h);
+
 
                 auto x0 = std::min<float>(std::floor((x - dx) * h1), fNumX - 2);
                 auto tx = ((x - dx) - x0 * h) * h1;
@@ -283,6 +284,7 @@ namespace  rocket {
                 auto d2 = tx * ty;
                 auto d3 = sx * ty;
 
+
                 auto nr0 = x0 * n + y0;
                 auto nr1 = x1 * n + y0;
                 auto nr2 = x1 * n + y1;
@@ -298,6 +300,8 @@ namespace  rocket {
                     d[nr2] += d2;
                     f[nr3] += pv * d3;
                     d[nr3] += d3;
+//                    std::cout << "d0: " << d0 << " d1: " << d1 << " d2: " << d2 << " d3: " << d3 << std::endl;
+//                    std::cout << "nr0: " << nr0 << " nr1: " << nr1 << " nr2: " << nr2 << " nr3: " << nr3 << std::endl;
                 } else {
                     auto offset = component == 0 ? n : 1;
                     auto valid0 = cellType[nr0] != AIR_CELL || cellType[nr0 - offset] != AIR_CELL ? 1.0 : 0.0;
@@ -338,8 +342,7 @@ namespace  rocket {
                     }
                 }
             }
-        }
-//    }
+    }
 
     }
 
@@ -424,16 +427,16 @@ namespace  rocket {
             auto x = particlePos[2 * i];
             auto y = particlePos[2 * i + 1];
 
-            x = std::clamp<int>(x, h, (fNumX - 1) * h);
-            y = std::clamp<int>(y, h, (fNumY - 1) * h);
+            x = std::clamp<float>(x, h, (fNumX - 1) * h);
+            y = std::clamp<float>(y, h, (fNumY - 1) * h);
 
             auto x0 = std::floor((x - h2) * h1);
             auto tx = ((x - h2) - x0 * h) * h1;
-            auto x1 = std::min<int>(x0 + 1, fNumX - 2);
+            auto x1 = std::min<float>(x0 + 1, fNumX - 2);
 
             auto y0 = std::floor((y - h2) * h1);
             auto ty = ((y - h2) - y0 * h) * h1;
-            auto y1 = std::min<int>(y0 + 1, fNumY - 2);
+            auto y1 = std::min<float>(y0 + 1, fNumY - 2);
 
             auto sx = 1.0 - tx;
             auto sy = 1.0 - ty;
@@ -463,9 +466,25 @@ namespace  rocket {
     }
 
 
-    void Grid::updatePositions(std::vector<RocketGameObject> &gameObjects){
-        
+    void Grid::updatePositionsFromGridToObject(std::vector<RocketGameObject> &gameObjects){
+        for(int i =0; i< gameObjects.size(); i++){
+            gameObjects[i].transform2d.translation.x = particlePos[2*i];
+            gameObjects[i].transform2d.translation.y = particlePos[2*i+1];
+        }
     }
+
+    void Grid::updatePositionsFromObjectToGrid(std::vector<RocketGameObject> &gameObjects){
+        if(maxParticles != gameObjects.size()){
+            maxParticles = gameObjects.size();
+            particlePos = std::vector<float>(2 * maxParticles);
+        }
+
+        for(int i =0; i< gameObjects.size(); i++){
+            particlePos[2*i] = gameObjects[i].transform2d.translation.x;
+            particlePos[2*i+1] = gameObjects[i].transform2d.translation.y;
+        }
+    }
+
 
 
 

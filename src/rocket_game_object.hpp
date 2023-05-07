@@ -7,7 +7,8 @@
 namespace rocket {
 	enum class RocketGameObjectType {
 		NONE,
-		PARTICLE
+		PARTICLE,
+        OBSTACLE
 	};
 
 	struct Transform2dComponent {

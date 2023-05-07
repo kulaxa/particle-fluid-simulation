@@ -92,7 +92,7 @@ namespace rocket{
                 fNumX =grid_width;
                 fNumY = grid_height;
                 grid = std::vector<Cell>(grid_height * grid_width);
-                h = 2 / (grid_height * grid_width);
+                h = 2.f / (grid_height * grid_width);
                 fInvSpacing = 1.0 / h;
                 fNumCells = fNumX * fNumY;
 
@@ -135,7 +135,33 @@ namespace rocket{
                 for(int i = 0; i < grid.size(); i++){
                     grid[i].objects = std::vector<uint32_t>();
                     grid[i].resolvedCells = std::vector<uint32_t>();
+                    cellType[i] = CellType::AIR_CELL;
                 }
+
+
+                for (int i = 0; i < grid_width; i++) {
+                    int cell_index = i;
+                    cellType[cell_index] = CellType::SOLID_CELL;
+
+                }
+                for (int i = 0; i < grid_width; i++) {
+                    int cell_index = (grid_height - 1) * grid_height + i;
+                    cellType[cell_index] = CellType::SOLID_CELL;
+
+                }
+
+                for (int i = 0; i < grid_height; i++) {
+                    int cell_index = i * grid_height;
+                    cellType[cell_index] = CellType::SOLID_CELL;
+
+                }
+                for (int i = 0; i < grid_height; i++) {
+                    int cell_index = (i + 1) * grid_height - 1;
+                    cellType[cell_index] = CellType::SOLID_CELL;
+
+                }
+
+
             };
             ~Grid() {};
 
@@ -154,7 +180,9 @@ namespace rocket{
         void clearResolvedCells();
         void solveIncompressibility(int numIters, float dt,float overRelaxation, bool compensateDrift = true);
         void updateParticleDensity();
-        void updatePositions(std::vector<RocketGameObject> &gameObjects);
+        void updatePositionsFromGridToObject(std::vector<RocketGameObject> &gameObjects);
+        void updatePositionsFromObjectToGrid(std::vector<RocketGameObject> &gameObjects);
+        void setParticleCount(int count){ numParticles = count; };
 
 
         void transferVelocities(std::vector<RocketGameObject>& gameObjects,bool toGrid,float flipRatio);
@@ -178,7 +206,7 @@ namespace rocket{
         float r = 0.010f;
         float fNumX;
         float fNumY ;
-        int h ;
+        float h ;
         float fInvSpacing ;
         int fNumCells;
 
