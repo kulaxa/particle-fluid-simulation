@@ -36,17 +36,102 @@ namespace rocket{
             Grid(){
                 this->grid_width = 1;
                 this->grid_height = 1;
+                this->maxParticles = 1;
+                fNumX =grid_width;
+                fNumY = grid_height;
                 grid = std::vector<Cell>(grid_height * grid_width);
+                h = 2 / (grid_height * grid_width);
+                fInvSpacing = 1.0 / h;
+                fNumCells = fNumX * fNumY;
+
+
+              u = std::vector<float>(fNumCells); // array of x velocities
+                v = std::vector<float>(fNumCells); // array of x velocities
+                 du = std::vector<float>(fNumCells); // array of x velocities
+                 dv = std::vector<float>(fNumCells); // array of x velocities
+                 prevU = std::vector<float>(fNumCells); // array of x velocities
+                 prevV = std::vector<float>(fNumCells); // array of x velocities
+                 p = std::vector<float>(fNumCells); // array of x velocities
+           s = std::vector<float>(fNumCells); // array of x velocities
+                cellType = std::vector<CellType>(fNumCells); // array of x velocities
+               cellColor = std::vector<float>(3* fNumCells); // array of x velocities
+
+                // particles
+
+               maxParticles = 1000;
+
+                 particlePos = std::vector<float>(2 * maxParticles);
+                 particleColor = std::vector<float>(3 * maxParticles);
+//        for(int i = 0; i < maxParticles; i++)
+//            particleColor[3 * i + 2] = 1.0;
+
+
+               particleVel = std::vector<float>(2 * maxParticles);
+                particleDensity = std::vector<float> (fNumCells);
+                 particleRestDensity = 0.0;
+
+                 pInvSpacing = 1.0 / (2.2 * particleRadius);
+                 pNumX = std::floor(grid_width * pInvSpacing) + 1;
+                 pNumY = std::floor(grid_height * pInvSpacing) + 1;
+                 pNumCells = pNumX * pNumY;
+
+              numCellParticles = std::vector<int>(pNumCells);
+                firstCellParticle = std::vector<int>(pNumCells + 1);
+                cellParticleIds = std::vector<int>(maxParticles);
+
+                 numParticles = 0;
                 for(int i = 0; i < grid.size(); i++){
                     grid[i].objects = std::vector<uint32_t>();
                     grid[i].resolvedCells = std::vector<uint32_t>();
                 }
             }
-            Grid(int width, int height, std::vector<RocketGameObject> &gameObjects){
+            Grid(int width, int height){
                 this->grid_width = width;
                 this->grid_height = height;
-                this->maxParticles = gameObjects.size();
+                this->maxParticles = 1;
+                fNumX =grid_width;
+                fNumY = grid_height;
                 grid = std::vector<Cell>(grid_height * grid_width);
+                h = 2 / (grid_height * grid_width);
+                fInvSpacing = 1.0 / h;
+                fNumCells = fNumX * fNumY;
+
+
+                u = std::vector<float>(fNumCells); // array of x velocities
+                v = std::vector<float>(fNumCells); // array of x velocities
+                du = std::vector<float>(fNumCells); // array of x velocities
+                dv = std::vector<float>(fNumCells); // array of x velocities
+                prevU = std::vector<float>(fNumCells); // array of x velocities
+                prevV = std::vector<float>(fNumCells); // array of x velocities
+                p = std::vector<float>(fNumCells); // array of x velocities
+                s = std::vector<float>(fNumCells); // array of x velocities
+                cellType = std::vector<CellType>(fNumCells); // array of x velocities
+                cellColor = std::vector<float>(3* fNumCells); // array of x velocities
+
+                // particles
+
+                maxParticles = 1000;
+
+                particlePos = std::vector<float>(2 * maxParticles);
+                particleColor = std::vector<float>(3 * maxParticles);
+//        for(int i = 0; i < maxParticles; i++)
+//            particleColor[3 * i + 2] = 1.0;
+
+
+                particleVel = std::vector<float>(2 * maxParticles);
+                particleDensity = std::vector<float> (fNumCells);
+                particleRestDensity = 0.0;
+
+                pInvSpacing = 1.0 / (2.2 * particleRadius);
+                pNumX = std::floor(grid_width * pInvSpacing) + 1;
+                pNumY = std::floor(grid_height * pInvSpacing) + 1;
+                pNumCells = pNumX * pNumY;
+
+                numCellParticles = std::vector<int>(pNumCells);
+                firstCellParticle = std::vector<int>(pNumCells + 1);
+                cellParticleIds = std::vector<int>(maxParticles);
+
+                numParticles = 0;
                 for(int i = 0; i < grid.size(); i++){
                     grid[i].objects = std::vector<uint32_t>();
                     grid[i].resolvedCells = std::vector<uint32_t>();
@@ -91,46 +176,46 @@ namespace rocket{
         float tankWidth = 2.f;
         float tankHeight = 2.f;
         float r = 0.010f;
-        float fNumX =grid_width;
-        float fNumY = grid_height;
-        int h = 2 / (grid_height * grid_width);
-        float fInvSpacing = 1.0 / h;
-        int fNumCells = fNumX * fNumY;
+        float fNumX;
+        float fNumY ;
+        int h ;
+        float fInvSpacing ;
+        int fNumCells;
 
-        std::vector<float> u = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<float> v = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<float> du = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<float> dv = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<float> prevU = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<float> prevV = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<float> p = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<float> s = std::vector<float>(fNumCells); // array of x velocities
-        std::vector<CellType> cellType = std::vector<CellType>(fNumCells); // array of x velocities
-        std::vector<float> cellColor = std::vector<float>(3* fNumCells); // array of x velocities
+        std::vector<float> u; // array of x velocities
+        std::vector<float> v ; // array of x velocities
+        std::vector<float> du ; // array of x velocities
+        std::vector<float> dv ; // array of x velocities
+        std::vector<float> prevU ; // array of x velocities
+        std::vector<float> prevV ; // array of x velocities
+        std::vector<float> p ; // array of x velocities
+        std::vector<float> s ; // array of x velocities
+        std::vector<CellType> cellType; // array of x velocities
+        std::vector<float> cellColor ; // array of x velocities
 
         // particles
 
         int maxParticles = 1000;
 
-        std::vector<float> particlePos = std::vector<float>(2 * maxParticles);
-        std::vector<float> particleColor = std::vector<float>(3 * maxParticles);
+        std::vector<float> particlePos ;
+        std::vector<float> particleColor ;
 //        for(int i = 0; i < maxParticles; i++)
 //            particleColor[3 * i + 2] = 1.0;
 
 
-        std::vector<float> particleVel = std::vector<float>(2 * maxParticles);
-        std::vector<float> particleDensity = std::vector<float> (fNumCells);
-        float particleRestDensity = 0.0;
+        std::vector<float> particleVel ;
+        std::vector<float> particleDensity ;
+        float particleRestDensity ;
 
-        float particleRadius;
-        float pInvSpacing = 1.0 / (2.2 * particleRadius);
-        float pNumX = std::floor(grid_width * pInvSpacing) + 1;
-        float pNumY = std::floor(grid_height * pInvSpacing) + 1;
-        int pNumCells = pNumX * pNumY;
+        float particleRadius = 0.01;
+        float pInvSpacing ;
+        float pNumX ;
+        float pNumY;
+        int pNumCells;
 
-        std::vector<int> numCellParticles = std::vector<int>(pNumCells);
-        std::vector<int> firstCellParticle = std::vector<int>(pNumCells + 1);
-        std::vector<int> cellParticleIds = std::vector<int>(maxParticles);
+        std::vector<int> numCellParticles ;
+        std::vector<int> firstCellParticle ;
+        std::vector<int> cellParticleIds ;
 
         int numParticles = 0;
         };
