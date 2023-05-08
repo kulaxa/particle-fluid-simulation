@@ -6,7 +6,7 @@
 
 namespace rocket {
     PhysicsSystem::PhysicsSystem(glm::vec2 gravity) : gravity(gravity) {
-        grid = Grid(8, 8);
+        grid = Grid(20, 20);
     }
 
     PhysicsSystem::~PhysicsSystem() {
@@ -35,17 +35,19 @@ namespace rocket {
         grid.clearResolvedCells();
 
 //
-//        grid.updatePositionsFromObjectToGrid(gameObjects);
-//        grid.updateObstacleCellsToSolid(gameObjects);
-//
-//        grid.transferVelocities(true, 0.65f);
-//        grid.updateParticleDensity();
-//        grid.solveIncompressibility(1, deltaTime, 0.85);
-//        grid.updatePositionsFromGridToObject(gameObjects);
-//        grid.updateObstacleCellsToAir(gameObjects);
+        grid.updatePositionsFromObjectToGrid(gameObjects);
+        grid.updateObstacleCellsToSolid(gameObjects);
+
+        grid.transferVelocities(true, 0.5f);
+        grid.updateParticleDensity();
+        grid.solveIncompressibility(10, deltaTime, 1.85);
+        grid.transferVelocities(false, 0.5f);
+
+        grid.updatePositionsFromGridToObject(gameObjects);
+        grid.updateObstacleCellsToAir(gameObjects);
         for (auto &gameObject: gameObjects) {
             if (gameObject.gravityApplied) {
-                gameObject.acceleration += gravity * 0.001f;
+                gameObject.acceleration += gravity * 0.005f;
             }
             if(gameObject.type == rocket::RocketGameObjectType::OBSTACLE) {
                 gameObject.obstacleGridPositions.clear();

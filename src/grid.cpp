@@ -572,8 +572,8 @@ namespace  rocket {
 
                 std::vector<int> obstacleCells = getContainedCellsForObstacle(gameObject);
 
-                for (int i = 0; i < obstacleCells.size(); i++) {
-                    cellType[obstacleCells[i]] = CellType::AIR_CELL;
+                for (int i = 0; i < cellType.size(); i++) {
+                    cellType[i] = CellType::AIR_CELL;
                 }
             }
             }

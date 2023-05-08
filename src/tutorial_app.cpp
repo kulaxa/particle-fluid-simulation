@@ -17,7 +17,7 @@
 namespace rocket {
 	static std::default_random_engine generator;
 	static float CIRCLE_RADIUS = 0.015f;
-    static float OBSTACLE_RADIUS = 0.2f;
+    static float OBSTACLE_RADIUS = 0.1f;
 	TutorialApp::TutorialApp()
 	{
 		loadGameObjects();
@@ -227,7 +227,7 @@ namespace rocket {
         gameObject.color = { colorDistribution(generator), colorDistribution(generator), colorDistribution(generator) };
         //gameObject.total_force = { 0.f, physicsSystem.getGravity().y * gameObject.mass };
         gameObject.type = RocketGameObjectType::OBSTACLE;
-        gameObject.radius = 0.2f;
+        gameObject.radius = OBSTACLE_RADIUS;
         //gameObject.acceleration = { 0.0f, 3.f };
 //		gameObject.transform2d.translation = {position.x + distribution(generator), position.y +distribution(generator)};
         gameObject.transform2d.translation = {position.x , position.y };
