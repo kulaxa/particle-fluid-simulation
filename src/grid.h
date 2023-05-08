@@ -58,7 +58,7 @@ namespace rocket{
 
                 // particles
 
-               maxParticles = 1000;
+               maxParticles = 5000;
 
                  particlePos = std::vector<float>(2 * maxParticles);
                  particleColor = std::vector<float>(3 * maxParticles);

@@ -9,6 +9,7 @@ namespace  rocket {
     void Grid::updateGrid(std::vector<RocketGameObject> &gameObjects) {
         for (auto &gameObject: gameObjects) {
             if(gameObject.type == RocketGameObjectType::OBSTACLE) {
+
                 for(auto &contained_cell: getContainedCellsForObstacle(gameObject)) {
                     if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
                         grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
@@ -61,25 +62,25 @@ namespace  rocket {
         float x = gameObject.transform2d.translation.x;
         float y = gameObject.transform2d.translation.y;
         float R = gameObject.radius;
-        int xMin = std::max(0, static_cast<int>(std::floor((x - R + 1) * grid_width / 2)));
-        int yMin = std::max(0, static_cast<int>(std::floor((y - R + 1) * grid_height / 2)));
-        int xMax = std::min(grid_width - 1, static_cast<int>(std::floor((x + R + 1) * grid_width / 2)));
-        int yMax = std::min(grid_height - 1, static_cast<int>(std::floor((y + R + 1) * grid_height / 2)));
+        // create a vector to store the cells that intersect with the circle
+        std::vector<int> intersectingCells;
 
-        // Add all cells in the bounding box that are fully or partially covered by the ball
-        std::vector<int> cellsContainingBall = std::vector<int>();
-        for (int xIndex = xMin; xIndex <= xMax; ++xIndex) {
-            for (int yIndex = yMin; yIndex <= yMax; ++yIndex) {
-                double cellCenterX = (xIndex + 0.5) * 2.0 / grid_width - 1.0;
-                double cellCenterY = (yIndex + 0.5) * 2.0 / grid_height - 1.0;
-                double distance = std::sqrt((x - cellCenterX) * (x - cellCenterX) + (y - cellCenterY) * (y - cellCenterY));
-                if (distance <= R) {
-                    cellsContainingBall.push_back(xIndex +yIndex * grid_width);
+// iterate over all cells in the grid and apply the circle-cell intersection check
+        for (int i = 0; i < grid_width; i++) {
+            for (int j = 0; j < grid_height; j++) {
+                // calculate the distance between the circle center and the cell center
+                double dx = (i + 0.5) * (2.0 / grid_width) - 1.0 - x;
+                double dy = (j + 0.5) * (2.0 / grid_height) - 1.0 - y;
+                double distance = std::sqrt(dx * dx + dy * dy);
+
+                // check if the circle intersects with the cell
+                if (distance <= r + std::max(2.0 / grid_width, 2.0 / grid_height)) {
+                    intersectingCells.push_back(i + j * grid_width);
                 }
             }
         }
 
-        return cellsContainingBall;
+        return intersectingCells;
     }
 
 
@@ -139,12 +140,13 @@ namespace  rocket {
                     RocketGameObject &object2 = gameObjects[object2_id];
 
 
-                    constexpr float response_coef = 1.0f;
-                    constexpr float eps = 0.0001f;
+                    constexpr float response_coef = 0.9f;
+                    constexpr float eps = 0.00001f;
                     const glm::vec2 o2_o1 = object1.transform2d.translation - object2.transform2d.translation;
                     const float dist2 = o2_o1.x * o2_o1.x + o2_o1.y * o2_o1.y;
                     const float dinstace_minus_radius = dist2 - glm::pow(object1.radius + object2.radius, 2);
                     if (dinstace_minus_radius < 0.0f && dist2 > eps) {
+
                         const float dist = sqrt(dist2);
                         // Radius are all equal to 1.0f
                         const float delta = response_coef * 0.5f * (object1.radius + object2.radius - dist);
@@ -285,6 +287,9 @@ namespace  rocket {
 
         if (toGrid) {
 
+            prevU.clear();
+            prevV.clear();
+
             std::copy(u.begin(), u.end(), std::back_inserter(prevU));
             std::copy(v.begin(), v.end(), std::back_inserter(prevV));
 
@@ -408,8 +413,10 @@ namespace  rocket {
 
         p = std::vector<float>(fNumCells, 0.0);
 
+        prevU.clear();
         std::copy(u.begin(), u.end(), std::back_inserter(prevU));
 
+        prevV.clear();
 //        prevU.set(u);
         std::copy(v.begin(), v.end(), std::back_inserter(prevV));
 
@@ -570,10 +577,9 @@ namespace  rocket {
         for(auto & gameObject : gameObjects){
             if(gameObject.type != rocket::RocketGameObjectType::OBSTACLE) {
 
-                std::vector<int> obstacleCells = getContainedCellsForObstacle(gameObject);
 
-                for (int i = 0; i < obstacleCells.size(); i++) {
-                    cellType[obstacleCells[i]] = CellType::AIR_CELL;
+                for (int i = 0; i < cellType.size(); i++) {
+                    cellType[i] = CellType::AIR_CELL;
                 }
             }
             }
