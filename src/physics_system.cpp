@@ -9,7 +9,7 @@ namespace rocket {
         grid = Grid(30, 30);
     }
 
-    PhysicsSystem::~PhysicsSystem() {
+    PhysicsSystem::~PhysicsSystem( ) {
     }
 
     void PhysicsSystem::updatePhysics(float deltaTime, std::vector<RocketGameObject> &gameObjects) {
@@ -28,26 +28,29 @@ namespace rocket {
 //        debugInfo.resolve_collisions_with_walls_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
 //        start_time = std::chrono::high_resolution_clock::now();
-        uint32_t  collision_count = grid.resolveCollisions(gameObjects);
-        grid.clearResolvedCells();
+        grid.resolveCollisions(gameObjects);
+       grid.clearResolvedCells();
 
-        collision_count += grid.resolveCollisions(gameObjects);
+        grid.resolveCollisions(gameObjects);
+        grid.clearResolvedCells();
+//
+        grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
 
 //
-        grid.updatePositionsFromObjectToGrid(gameObjects);
-        grid.updateObstacleCellsToSolid(gameObjects);
-
-        grid.transferVelocities(true, 0.5f);
-        grid.updateParticleDensity();
-        grid.solveIncompressibility(20, deltaTime, 1.9);
-        grid.transferVelocities(false, 0.5f);
-
-        grid.updatePositionsFromGridToObject(gameObjects);
-        grid.updateObstacleCellsToAir(gameObjects);
+//        grid.updatePositionsFromObjectToGrid(gameObjects);
+//        grid.updateObstacleCellsToSolid(gameObjects);
+//
+//        grid.transferVelocities(true, 0.8f);
+//        grid.updateParticleDensity();
+//        grid.solveIncompressibility(20, deltaTime, 1.9);
+//        grid.transferVelocities(false, 0.8f);
+//
+//        grid.updatePositionsFromGridToObject(gameObjects);
+//        grid.updateObstacleCellsToAir(gameObjects);
         for (auto &gameObject: gameObjects) {
             if (gameObject.gravityApplied) {
-                gameObject.acceleration += gravity * 0.003f;
+                gameObject.acceleration += gravity * 0.005f;
             }
             if(gameObject.type == rocket::RocketGameObjectType::OBSTACLE) {
                 gameObject.obstacleGridPositions.clear();

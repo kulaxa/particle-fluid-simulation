@@ -7,35 +7,39 @@
 #include "grid.h"
 namespace  rocket {
     void Grid::updateGrid(std::vector<RocketGameObject> &gameObjects) {
+        // Clear the grid
+        clearGrid();
         for (auto &gameObject: gameObjects) {
             if(gameObject.type == RocketGameObjectType::OBSTACLE) {
 
                 for(auto &contained_cell: getContainedCellsForObstacle(gameObject)) {
-                    if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
-                        grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
-                                                                                grid[gameObject.gridPosition].objects.end(),
-                                                                                gameObject.getId()),
-                                                                    grid[gameObject.gridPosition].objects.end());
-                        grid[contained_cell].objects.push_back(gameObject.getId());
-                    } else if (gameObject.gridPosition == -1) {
-                        grid[contained_cell].objects.push_back(gameObject.getId());
-                    }
+//                    if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
+//                        grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
+//                                                                                grid[gameObject.gridPosition].objects.end(),
+//                                                                                gameObject.getId()),
+//                                                                    grid[gameObject.gridPosition].objects.end());
+//                        grid[contained_cell].objects.push_back(gameObject.getId());
+//                    } else if (gameObject.gridPosition == -1) {
+//                        grid[contained_cell].objects.push_back(gameObject.getId());
+//                    }
                     gameObject.gridPosition = contained_cell;
                     gameObject.obstacleGridPositions.push_back(contained_cell);
+                    grid[contained_cell].objects.push_back(gameObject.getId());
                 }
                 continue;
             }
             uint32_t contained_cell = getContainedCell(gameObject);
-            if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
-                grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
-                                                                        grid[gameObject.gridPosition].objects.end(),
-                                                                        gameObject.getId()),
-                                                            grid[gameObject.gridPosition].objects.end());
-                grid[contained_cell].objects.push_back(gameObject.getId());
-            } else if (gameObject.gridPosition == -1) {
-                grid[contained_cell].objects.push_back(gameObject.getId());
-            }
+//            if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
+//                grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
+//                                                                        grid[gameObject.gridPosition].objects.end(),
+//                                                                        gameObject.getId()),
+//                                                            grid[gameObject.gridPosition].objects.end());
+//                grid[contained_cell].objects.push_back(gameObject.getId());
+//            } else if (gameObject.gridPosition == -1) {
+//                grid[contained_cell].objects.push_back(gameObject.getId());
+//            }
             gameObject.gridPosition = contained_cell;
+            grid[contained_cell].objects.push_back(gameObject.getId());
         }
     }
 
@@ -62,25 +66,29 @@ namespace  rocket {
         float x = gameObject.transform2d.translation.x;
         float y = gameObject.transform2d.translation.y;
         float R = gameObject.radius;
+        int gridWidth = grid_width;
+        int gridHeight = grid_height;
+
         // create a vector to store the cells that intersect with the circle
-        std::vector<int> intersectingCells;
+        int xMin = std::max(0, static_cast<int>(std::floor((x - R) * gridWidth / 2 + gridWidth / 2)));
+        int yMin = std::max(0, static_cast<int>(std::floor((y - R) * gridHeight / 2 + gridHeight / 2)));
+        int xMax = std::min(gridWidth - 1, static_cast<int>(std::floor((x + R) * gridWidth / 2 + gridWidth / 2)));
+        int yMax = std::min(gridHeight - 1, static_cast<int>(std::floor((y + R) * gridHeight / 2 + gridHeight / 2)));
 
-// iterate over all cells in the grid and apply the circle-cell intersection check
-        for (int i = 0; i < grid_width; i++) {
-            for (int j = 0; j < grid_height; j++) {
-                // calculate the distance between the circle center and the cell center
-                double dx = (i + 0.5) * (2.0 / grid_width) - 1.0 - x;
-                double dy = (j + 0.5) * (2.0 / grid_height) - 1.0 - y;
-                double distance = std::sqrt(dx * dx + dy * dy);
-
-                // check if the circle intersects with the cell
-                if (distance <= r + std::max(2.0 / grid_width, 2.0 / grid_height)) {
-                    intersectingCells.push_back(i + j * grid_width);
-                }
+        // Add all cells in the bounding box that are fully or partially covered by the circle
+        std::vector<int> cellsContainingBall;
+        for (int yIndex = yMin; yIndex <= yMax; ++yIndex) {
+            for (int xIndex = xMin; xIndex <= xMax; ++xIndex) {
+//                double cellCenterX = -1.0 + (2.0 / gridWidth) * (xIndex + 0.5);
+//                double cellCenterY = -1.0 + (2.0 / gridHeight) * (yIndex + 0.5);
+//                double distance = std::sqrt((x - cellCenterX) * (x - cellCenterX) + (y - cellCenterY) * (y - cellCenterY));
+//                if (distance <= R) {
+                    cellsContainingBall.push_back({yIndex * gridWidth + xIndex});
+//                }
             }
         }
 
-        return intersectingCells;
+        return cellsContainingBall;
     }
 
 
@@ -140,7 +148,7 @@ namespace  rocket {
                     RocketGameObject &object2 = gameObjects[object2_id];
 
 
-                    constexpr float response_coef = 0.9f;
+                    constexpr float response_coef = 1.0f;
                     constexpr float eps = 0.00001f;
                     const glm::vec2 o2_o1 = object1.transform2d.translation - object2.transform2d.translation;
                     const float dist2 = o2_o1.x * o2_o1.x + o2_o1.y * o2_o1.y;
@@ -167,6 +175,13 @@ namespace  rocket {
             }
         }
         return collisions;
+    }
+
+    void Grid::clearGrid(){
+        for (int i = 0; i < grid.size(); i++) {
+            grid[i].objects.clear();
+            //grid[i].resolvedCells.clear();
+        }
     }
 
     void Grid::printGrid() {

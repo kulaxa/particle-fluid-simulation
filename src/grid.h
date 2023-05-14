@@ -169,6 +169,7 @@ namespace rocket{
 //            void operator=(const Grid&) = delete;
 
         void updateGrid(std::vector<RocketGameObject> &gameObjects);
+        void clearGrid();
         uint32_t getContainedCell(RocketGameObject &gameObject) ;
         uint32_t resolveCollisions(std::vector<RocketGameObject> &gameObjects);
         uint32_t resolveCollisionsBetweenTwoCells(std::vector<RocketGameObject> &gameObjects, int cell1, int cell2);
