@@ -23,38 +23,58 @@ namespace rocket {
 //        debugInfo.update_grid_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
 //        start_time = std::chrono::high_resolution_clock::now();
-        grid.resolveCollisionsWithWalls(gameObjects);
 //        end_time = std::chrono::high_resolution_clock::now();
 //        debugInfo.resolve_collisions_with_walls_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
-//        start_time = std::chrono::high_resolution_clock::now();
-        grid.resolveCollisions(gameObjects);
-       grid.clearResolvedCells();
+
+        //grid.clearResolvedCells();
+        grid.resolveCollisionsWithWalls(gameObjects);
 
         grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
-//
-        grid.resolveCollisions(gameObjects);
-        grid.clearResolvedCells();
+
+
+
+        grid.updatePositionsFromObjectToGrid(gameObjects);
+        grid.updateObstacleCellsToSolid(gameObjects);
+
+        grid.transferVelocities(true, 0.6f);
+        grid.updateParticleDensity();
+        grid.solveIncompressibility(20, deltaTime, 1.9);
+        grid.transferVelocities(false, 0.6f);
+
+        grid.updatePositionsFromGridToObject(gameObjects);
+        grid.updateObstacleCellsToAir(gameObjects);
+
+        //        start_time = std::chrono::high_resolution_clock::now();
 
 //
-//        grid.updatePositionsFromObjectToGrid(gameObjects);
-//        grid.updateObstacleCellsToSolid(gameObjects);
 //
-//        grid.transferVelocities(true, 0.8f);
-//        grid.updateParticleDensity();
-//        grid.solveIncompressibility(20, deltaTime, 1.9);
-//        grid.transferVelocities(false, 0.8f);
-//
-//        grid.updatePositionsFromGridToObject(gameObjects);
-//        grid.updateObstacleCellsToAir(gameObjects);
+
+        grid.resolveCollisions(gameObjects);
         for (auto &gameObject: gameObjects) {
-            if (gameObject.gravityApplied) {
-                gameObject.acceleration += gravity * 0.005f;
+
+            if (gameObject.gravityApplied && gameObject.acceleration.y < 0.01f) {
+                gameObject.acceleration += gravity * 0.0001f;
+                //std::cout << "Object: " << gameObject.getId() << ", position " << gameObject.acceleration.y << std::endl;
+
             }
             if(gameObject.type == rocket::RocketGameObjectType::OBSTACLE) {
                 gameObject.obstacleGridPositions.clear();
             }
+
+//            if(gameObject.transform2d.translation.x < -1.0f){
+//                gameObject.transform2d.translation.x = -1.0f;
+//            }
+//            if(gameObject.transform2d.translation.x > 1.0f){
+//                gameObject.transform2d.translation.x = 1.0f;
+//            }
+//            if(gameObject.transform2d.translation.y< -1.0f){
+//                gameObject.transform2d.translation.y = -1.0f;
+//            }
+//            if(gameObject.transform2d.translation.y > 1.0f){
+//                gameObject.transform2d.translation.y = 1.0f;
+//            }
             gameObject.transform2d.translation += gameObject.acceleration * deltaTime;
 //            auto collisions = resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
 //            std::cout << "Collisions: " << collisions << std::endl;
@@ -71,7 +91,7 @@ namespace rocket {
                                            (deltaTime * deltaTime);
             gameObject.last_position = position;
             gameObject.transform2d.translation = new_position;
-            gameObject.acceleration = {0.0f, 0.0f};
+            //gameObject.acceleration = {0.0f, 0.0f};
         }
 
     }

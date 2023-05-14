@@ -16,8 +16,8 @@
 
 namespace rocket {
 	static std::default_random_engine generator;
-	static float CIRCLE_RADIUS = 0.01f;
-    static float OBSTACLE_RADIUS = 0.3f;
+	static float CIRCLE_RADIUS = 0.010f;
+    static float OBSTACLE_RADIUS = 0.2f;
 	TutorialApp::TutorialApp()
 	{
 		loadGameObjects();

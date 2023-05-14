@@ -28,7 +28,13 @@ namespace  rocket {
                 }
                 continue;
             }
-            uint32_t contained_cell = getContainedCell(gameObject);
+           // uint32_t contained_cell = getContainedCell(gameObject);
+            std::vector<int> contained_cells = getContainedCellsForObstacle(gameObject);
+            gameObject.gridPositions = contained_cells;
+            for(auto &contained_cell: contained_cells) {
+                gameObject.gridPosition = contained_cell;
+                grid[contained_cell].objects.push_back(gameObject.getId());
+            }
 //            if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
 //                grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
 //                                                                        grid[gameObject.gridPosition].objects.end(),
@@ -38,8 +44,8 @@ namespace  rocket {
 //            } else if (gameObject.gridPosition == -1) {
 //                grid[contained_cell].objects.push_back(gameObject.getId());
 //            }
-            gameObject.gridPosition = contained_cell;
-            grid[contained_cell].objects.push_back(gameObject.getId());
+            //gameObject.gridPosition = contained_cell;
+            //grid[contained_cell].objects.push_back(gameObject.getId());
         }
     }
 
@@ -148,7 +154,7 @@ namespace  rocket {
                     RocketGameObject &object2 = gameObjects[object2_id];
 
 
-                    constexpr float response_coef = 1.0f;
+                    constexpr float response_coef = 1.00f;
                     constexpr float eps = 0.00001f;
                     const glm::vec2 o2_o1 = object1.transform2d.translation - object2.transform2d.translation;
                     const float dist2 = o2_o1.x * o2_o1.x + o2_o1.y * o2_o1.y;
@@ -249,8 +255,11 @@ namespace  rocket {
             RocketGameObject &gameObject = gameObjects[object_id];
 
             if(gameObject.type == RocketGameObjectType::OBSTACLE) {
-                continue;
+               // continue;
             }
+            float x = gameObject.transform2d.translation.x;
+            float y = gameObject.transform2d.translation.y;
+
             float radius = gameObject.radius;
             float margin = 0.001f;
             glm::vec2 center = gameObject.transform2d.translation;

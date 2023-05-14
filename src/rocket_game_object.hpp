@@ -59,6 +59,7 @@ namespace rocket {
 		glm::vec2 acceleration = glm::zero<glm::vec2>();
         glm::vec2 last_position = glm::zero<glm::vec2>();
         uint32_t gridPosition = -1;
+        std::vector<int> gridPositions{};
         std::vector<int> obstacleGridPositions{};
         glm::vec2 velocity = glm::zero<glm::vec2>();
 
