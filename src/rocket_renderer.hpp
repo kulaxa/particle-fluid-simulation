@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <cassert>
+#include <iostream>
 #include "rocket_model.hpp"
 
 #include "imgui.h"
@@ -49,7 +50,7 @@ namespace rocket {
 		std::unique_ptr<RocketSwapChain> rocketSwapChain;
 		std::vector<VkCommandBuffer> commandBuffers;
 		uint32_t currentImageIndex;
-		int currentFrameIndex;
+		int currentFrameIndex = 0;
 		bool isFrameStarted = false;
 	};
 }

@@ -18,8 +18,8 @@ namespace rocket {
 
 	class TutorialApp {
 	public:
-		static constexpr int WIDTH = 720;
-		static constexpr int HEIGHT = 720;
+		static constexpr int WIDTH = 980;
+		static constexpr int HEIGHT = 980;
 		std::string fragShaderPath = "shaders/simple_shader.frag.spv";
 		std::string vertShaderPath = "shaders/simple_shader.vert.spv";
 
@@ -34,7 +34,7 @@ namespace rocket {
 		void loadGameObjects();
 		uint32_t createParticle(glm::vec2 position);
         uint32_t createObstacle(glm::vec2 position);
-        uint32_t createMultipleParticles(glm::vec2 position, int count);
+        uint32_t createMultipleParticles(glm::vec2 position, int count, float radius);
 		uint32_t getSelectedParticle(float xMouse, float yMouse, float offset);
 		uint32_t getParticleIndex(uint32_t particleId);
 		void clearSimulation();
@@ -42,7 +42,7 @@ namespace rocket {
 		RocketDevice rocketDevice{ rocketWindow };
 		RocketRenderer rocketRenderer{ rocketWindow, rocketDevice };
 		std::vector<RocketGameObject> gameObjects;
-		PhysicsSystem physicsSystem{ glm::vec2(0.0f, 9.8f) };
+		PhysicsSystem physicsSystem{ glm::vec2(0.0f, 9.8f) , 30};
 		std::shared_ptr<RocketModel> circleModel = nullptr;
         std::shared_ptr<RocketModel> obstacleModel = nullptr;
         bool obstacleCreated = false;

@@ -17,7 +17,7 @@ namespace rocket {
     };
 	class PhysicsSystem {
 	public:
-		PhysicsSystem(glm::vec2 gravity);
+		PhysicsSystem(glm::vec2 gravity, int gridDimension);
 		~PhysicsSystem();
 
 		PhysicsSystem(const PhysicsSystem&) = delete;
@@ -34,8 +34,10 @@ namespace rocket {
         DebugInfo getDebugInfo();
 
 
-
+		void setGravity(glm::vec2 gravity) { this->gravity = gravity; }
 		glm::vec2 getGravity() { return gravity; }
+
+        void setGridDimension(int gridDimension) { grid = Grid(gridDimension, gridDimension); }
 	private:
 		glm::vec2 gravity;
         Grid grid;

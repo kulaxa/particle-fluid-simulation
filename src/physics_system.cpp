@@ -5,8 +5,8 @@
 #include <chrono>
 
 namespace rocket {
-    PhysicsSystem::PhysicsSystem(glm::vec2 gravity) : gravity(gravity) {
-        grid = Grid(30, 30);
+    PhysicsSystem::PhysicsSystem(glm::vec2 gravity, int gridDimension) : gravity(gravity) {
+        grid = Grid(gridDimension, gridDimension);
     }
 
     PhysicsSystem::~PhysicsSystem( ) {
@@ -33,9 +33,8 @@ namespace rocket {
         grid.resolveCollisions(gameObjects);
         grid.clearResolvedCells();
 
-
-
-        grid.updatePositionsFromObjectToGrid(gameObjects);
+        grid.resolveCollisions(gameObjects);
+      grid.updatePositionsFromObjectToGrid(gameObjects);
         grid.updateObstacleCellsToSolid(gameObjects);
 
         grid.transferVelocities(true, 0.6f);
@@ -51,11 +50,10 @@ namespace rocket {
 //
 //
 
-        grid.resolveCollisions(gameObjects);
         for (auto &gameObject: gameObjects) {
 
-            if (gameObject.gravityApplied && gameObject.acceleration.y < 0.01f) {
-                gameObject.acceleration += gravity * 0.0001f;
+            if (gameObject.gravityApplied) {
+                gameObject.acceleration = gravity * 0.001f;
                 //std::cout << "Object: " << gameObject.getId() << ", position " << gameObject.acceleration.y << std::endl;
 
             }

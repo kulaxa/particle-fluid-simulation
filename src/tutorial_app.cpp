@@ -44,30 +44,37 @@ namespace rocket {
 			{
 				static int i = 1;
 				static int particleCounter = 0;
+                static int GRID_DIMENSION = 10;
 
 				ImGui::Begin("Fps and slider!");                          // Create a window called "Hello, world!" and append into it.
 
 
-				ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+				ImGui::SliderInt("Number of particles to add", &i,1, 20);            // Edit 1 float using a slider from 0.0f to 1.0f
 
-				ImGui::SliderInt("Number of particles to add", &i,1, 100);            // Edit 1 float using a slider from 0.0f to 1.0f
+                if(ImGui::SliderInt("Grid dimension (NxN)", &GRID_DIMENSION, 1, 20)){
+                    std::cout << "Grid dimension changed to " << GRID_DIMENSION << std::endl;
+                    // physicsSystem.setGridDimension(GRID_DIMENSION);
+                }
 
-				if (ImGui::SliderFloat("Particle radius", &CIRCLE_RADIUS, 0.0f, 0.1f)) {
-					loadGameObjects();
-				}
-					// Edit 1 float using a slider from 0.0f to 1.0f
+//				if (ImGui::SliderFloat("Particle radius", &CIRCLE_RADIUS, 0.0f, 0.1f)) {
+//					loadGameObjects();
+//				}
 
-				if (ImGui::Button("Clear Simulation")) {
-					clearSimulation();
-					particleCounter = 0;
+				if (ImGui::Button("Flip Gravity")) {
+
+					glm::vec2 g = physicsSystem.getGravity();
+					
+					physicsSystem.setGravity(glm::vec2(g.y, g.x));
+					
 				}                        // Buttons return true when clicked (most widgets return true when edited/activated)
 				float mouseX = 2 * (ImGui::GetMousePos().x / WIDTH - 0.5f);
 				float mouseY = 2 * (ImGui::GetMousePos().y / HEIGHT - 0.5f);
 
                 if(!obstacleCreated){
                     createObstacle({0.0f, 0.0f});
-                    std::cout << "Obstacle created" << std::endl;
                     obstacleCreated = true;
+                    std::cout << "Obstacle created" << std::endl;
+
                 }
 
 				if (ImGui::IsMouseDown(0)) {
@@ -83,7 +90,7 @@ namespace rocket {
                     if(selectedParticle == -1){
                         particleCounter+=i;
 
-                        createMultipleParticles({mouseX, mouseY}, i);
+                        createMultipleParticles({mouseX, mouseY}, i, CIRCLE_RADIUS);
                         std::cout << i << " Particle created" << std::endl;
                     }
                 }
@@ -91,9 +98,9 @@ namespace rocket {
 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
-				uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
-				if (selectedParticle != -1) {
-                    ImGui::Text("[Obstacle grid position] lastPosition %d, number of gridCells %d", gameObjects[getParticleIndex(selectedParticle)].gridPosition, gameObjects[getParticleIndex(selectedParticle)].obstacleGridPositions.size());
+				//uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
+				//if (selectedParticle != -1) {
+                  //  ImGui::Text("[Obstacle grid position] lastPosition %d, number of gridCells %d", gameObjects[getParticleIndex(selectedParticle)].gridPosition, gameObjects[getParticleIndex(selectedParticle)].obstacleGridPositions.size());
 //					ImGui::Text("[Hover Particle Info] position (%.3f, %.3f) gridPosition %d, id %d",
 //						gameObjects[getParticleIndex(selectedParticle)].velocity.x,
 //						gameObjects[getParticleIndex(selectedParticle)].velocity.y,
@@ -103,14 +110,14 @@ namespace rocket {
 //                        gameObjects[getParticleIndex(selectedParticle)].getId()
 
 //                    );
-				}
-                DebugInfo debugInfo = physicsSystem.getDebugInfo();
-                ImGui::Text("Average number of particles in a cell: %f, number of occupied cells %d", debugInfo.averageCellObjectCount, debugInfo.filledCellCount /1000);
-                ImGui::Text("Time to update grid %d us", debugInfo.update_grid_duration);
-                ImGui::Text("Time to resolve collision %d us", debugInfo.resolve_collisions_duration);
+				//}
+               // DebugInfo debugInfo = physicsSystem.getDebugInfo();
+             //   ImGui::Text("Average number of particles in a cell: %f, number of occupied cells %d", debugInfo.averageCellObjectCount, debugInfo.filledCellCount /1000);
+// ImGui::Text("Time to update grid %d us", debugInfo.update_grid_duration);
+              //  ImGui::Text("Time to resolve collision %d us", debugInfo.resolve_collisions_duration);
 
-                ImGui::Text("Time to resolve wall collisions %d us", debugInfo.resolve_collisions_with_walls_duration);
-                ImGui::Text("Collision count: %d", debugInfo.collision_count);
+           //     ImGui::Text("Time to resolve wall collisions %d us", debugInfo.resolve_collisions_with_walls_duration);
+             //   ImGui::Text("Collision count: %d", debugInfo.collision_count);
 
 
                 ImGui::End();
@@ -120,7 +127,8 @@ namespace rocket {
 			ImGui::Render();
 
 			if (auto commandBuffer = rocketRenderer.beginFrame()) {
-				rocketRenderer.beginSwapChainRenderPass(commandBuffer);
+
+                rocketRenderer.beginSwapChainRenderPass(commandBuffer);
 				physicsSystem.updatePhysics(1/ ImGui::GetIO().Framerate, gameObjects);
 				simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
 				ImDrawData* draw_data = ImGui::GetDrawData();
@@ -208,13 +216,13 @@ namespace rocket {
 		gameObjects.clear();
 	}
 
-    uint32_t TutorialApp::createMultipleParticles(glm::vec2 position, int count){
+    uint32_t TutorialApp::createMultipleParticles(glm::vec2 position, int count, float radius){
 //        std::uniform_real_distribution<double> distribution(-0.1, 0.1);
 //
 //        glm::vec2 pos =  {position.x + distribution(generator), position.y +distribution(generator)};
         createParticle(position);
-        for (int i = 0; i < count-1; i++) {
-            createParticle({position.x, position.y - i*0.05f});
+        for (int i = -count/2; i < count-1; i++) {
+            createParticle({position.x + i*(radius * 3), position.y });
         }
         return gameObjects.size() - 1;
     }

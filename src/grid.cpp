@@ -135,15 +135,12 @@ namespace  rocket {
 
     uint32_t Grid::resolveCollisionsBetweenTwoCells(std::vector<RocketGameObject> &gameObjects, int cell1, int cell2) {
         uint32_t collisions = 0;
-
         if (std::count(grid[cell1].resolvedCells.begin(), grid[cell1].resolvedCells.end(), cell2)) {
             return -1;
         }
         if (std::count(grid[cell2].resolvedCells.begin(), grid[cell2].resolvedCells.end(), cell1)) {
             return -1;
         }
-//        for(int object1_id : grid[cell1]){
-//            for(int object2_id : grid[cell2]){
         for (int i = 0; i < grid[cell1].objects.size(); i++) {
             for (int j = 0; j < grid[cell2].objects.size(); j++) {
                 int object1_id = grid[cell1].objects[i];
@@ -153,7 +150,6 @@ namespace  rocket {
                     RocketGameObject &object1 = gameObjects[object1_id];
                     RocketGameObject &object2 = gameObjects[object2_id];
 
-
                     constexpr float response_coef = 1.00f;
                     constexpr float eps = 0.00001f;
                     const glm::vec2 o2_o1 = object1.transform2d.translation - object2.transform2d.translation;
@@ -162,7 +158,6 @@ namespace  rocket {
                     if (dinstace_minus_radius < 0.0f && dist2 > eps) {
 
                         const float dist = sqrt(dist2);
-                        // Radius are all equal to 1.0f
                         const float delta = response_coef * 0.5f * (object1.radius + object2.radius - dist);
                         const glm::vec2 col_vec = (o2_o1 / dist) * delta;
                         if(object1.type == rocket::RocketGameObjectType::OBSTACLE){
@@ -225,45 +220,32 @@ namespace  rocket {
 
     uint32_t Grid::resolveCollisionsWithWalls(std::vector<RocketGameObject> &gameObjects) {
 
-        uint32_t collisions = 0;
-//        collisions+= resolveCollisionsBetweenCellAndWalls(gameObjects, 0, 3); // left
-//        collisions+= resolveCollisionsBetweenCellAndWalls(gameObjects, grid_width - 1, 1); // right
         for (int i = 0; i < grid_width; i++) {
-            collisions += resolveCollisionsBetweenCellAndWalls(gameObjects, i, 0); // top
+            resolveCollisionsBetweenCellAndWalls(gameObjects, i, 0); // top
         }
         for (int i = 0; i < grid_width; i++) {
             int cell_index = (grid_height - 1) * grid_height + i;
-            collisions += resolveCollisionsBetweenCellAndWalls(gameObjects, cell_index, 2); // bottom
+            resolveCollisionsBetweenCellAndWalls(gameObjects, cell_index, 2); // bottom
         }
 
         for (int i = 0; i < grid_height; i++) {
             int cell_index = i * grid_height;
-            collisions += resolveCollisionsBetweenCellAndWalls(gameObjects, cell_index, 3); // left
+            resolveCollisionsBetweenCellAndWalls(gameObjects, cell_index, 3); // left
         }
         for (int i = 0; i < grid_height; i++) {
             int cell_index = (i + 1) * grid_height - 1;
-            collisions += resolveCollisionsBetweenCellAndWalls(gameObjects, cell_index, 1); // right
+            resolveCollisionsBetweenCellAndWalls(gameObjects, cell_index, 1); // right
         }
 
-
-        return collisions;
     }
 
     uint32_t Grid::resolveCollisionsBetweenCellAndWalls(std::vector<RocketGameObject> &gameObjects, int cell,
                                                         int direction) { // 0 - top, 1 - right, 2 - bottom, 3 - left
         for (int object_id: grid[cell].objects) {
             RocketGameObject &gameObject = gameObjects[object_id];
-
-            if(gameObject.type == RocketGameObjectType::OBSTACLE) {
-               // continue;
-            }
-            float x = gameObject.transform2d.translation.x;
-            float y = gameObject.transform2d.translation.y;
-
             float radius = gameObject.radius;
             float margin = 0.001f;
             glm::vec2 center = gameObject.transform2d.translation;
-
             if (direction == 2) {
                 if (center.y + radius >= 1.0f - margin) {
                     float distance = center.y + radius - 1.0f + margin;
@@ -282,7 +264,6 @@ namespace  rocket {
                     gameObject.transform2d.translation.y -= distance;
                 }
             }
-
             if (direction == 3) {
                 if (center.x - radius <= -1.0f + margin) {
                     float distance = center.x - radius + 1.0f - margin;
@@ -386,8 +367,6 @@ namespace  rocket {
                     d[nr2] += d2;
                     f[nr3] += pv * d3;
                     d[nr3] += d3;
-//                    std::cout << "d0: " << d0 << " d1: " << d1 << " d2: " << d2 << " d3: " << d3 << std::endl;
-//                    std::cout << "nr0: " << nr0 << " nr1: " << nr1 << " nr2: " << nr2 << " nr3: " << nr3 << std::endl;
                 } else {
                     auto offset = component == 0 ? n : 1;
                     auto valid0 = cellType[nr0] != AIR_CELL || cellType[nr0 - offset] != AIR_CELL ? 1.0 : 0.0;
@@ -449,26 +428,17 @@ namespace  rocket {
         auto n = fNumY;
         auto cp = density * h / dt;
 
-        for (auto i = 0; i < fNumCells; i++) {
-//    auto u_t = u[i];
-//    auto v_t = v[i];
-        }
-
         for (auto iter = 0; iter < numIters; iter++) {
 
             for (auto i = 1; i < fNumX - 1; i++) {
                 for (auto j = 1; j < fNumY - 1; j++) {
-
                     if (cellType[i * n + j] != FLUID_CELL)
                         continue;
-
                     auto center = i * n + j;
                     auto left = (i - 1) * n + j;
                     auto right = (i + 1) * n + j;
                     auto bottom = i * n + j - 1;
                     auto top = i * n + j + 1;
-
-//auto s = s[center];
                     auto sx0 = s[left];
                     auto sx1 = s[right];
                     auto sy0 = s[bottom];
@@ -476,21 +446,16 @@ namespace  rocket {
                     auto s = sx0 + sx1 + sy0 + sy1;
                     if (s == 0.0)
                         continue;
-
-                    auto div = u[right] - u[center] +
-                               v[top] - v[center];
-
+                    auto div = u[right] - u[center] + v[top] - v[center];
                     if (particleRestDensity > 0.0 && compensateDrift) {
                         auto k = 1.0;
                         auto compression = particleDensity[i * n + j] - particleRestDensity;
                         if (compression > 0.0)
                             div = div - k * compression;
                     }
-
                     auto p_t = -div / s;
                     p_t *= overRelaxation;
                     p[center] += cp * p_t;
-
                     u[center] -= sx0 * p_t;
                     u[right] += sx1 * p_t;
                     v[center] -= sy0 * p_t;
