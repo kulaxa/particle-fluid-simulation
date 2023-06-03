@@ -38,6 +38,9 @@ namespace rocket {
 		void setGravity(glm::vec2 gravity) {this->gravity = gravity; }
         void setFlipRatio(float flip_ratio) { this->flip_ratio = flip_ratio; }
         void setFluidIterationCount(int fluid_iteration_count) { this->fluid_iteration_count = fluid_iteration_count; }
+        void disableFluidPhysics() { fluid_physics_enabled = false; }
+        void enableFluidPhysics() { fluid_physics_enabled = true; }
+        bool isFluidPhysicsEnabled() { return fluid_physics_enabled; }
 		glm::vec2 getGravity() { return gravity; }
 
         void setGridDimension(int gridDimension) { grid = Grid(gridDimension, gridDimension); }
@@ -47,5 +50,6 @@ namespace rocket {
         DebugInfo debugInfo;
         int fluid_iteration_count;
         float flip_ratio;
+        bool fluid_physics_enabled = true   ;
 	};
 }

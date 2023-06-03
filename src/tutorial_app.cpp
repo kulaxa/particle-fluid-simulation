@@ -145,11 +145,17 @@ namespace rocket {
                         gravity_dir = {0.0f, gravity_strength};
 
                     }
-
-
                 }
 
-				float mouseX = 2 * (ImGui::GetMousePos().x / WIDTH - 0.5f);
+                if(ImGui::Button("Enable fluid physics")){
+                    physicsSystem.enableFluidPhysics();
+                }
+                if(ImGui::Button("Disable fluid physics")){
+                    physicsSystem.disableFluidPhysics();
+                }
+
+
+                float mouseX = 2 * (ImGui::GetMousePos().x / WIDTH - 0.5f);
 				float mouseY = 2 * (ImGui::GetMousePos().y / HEIGHT - 0.5f);
 
                 if(!obstacleCreated){
@@ -180,6 +186,7 @@ namespace rocket {
 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
+                ImGui::Text("Fluid simulation enabled: %s", physicsSystem.isFluidPhysicsEnabled() ? "true" : "false");
 				//uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
 				//if (selectedParticle != -1) {
                   //  ImGui::Text("[Obstacle grid position] lastPosition %d, number of gridCells %d", gameObjects[getParticleIndex(selectedParticle)].gridPosition, gameObjects[getParticleIndex(selectedParticle)].obstacleGridPositions.size());
