@@ -3,6 +3,8 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
@@ -13,12 +15,49 @@
 #include "physics_system.hpp"
 #include <random>
 #include <csignal>
+#include <thread>
+#include <chrono>
+#include <atomic>
+
+float gravity_strength = 2.f;
+glm::vec2 gravity_dir = {0.0f, gravity_strength};
+
+void toggleGravityFlip(std::atomic<bool>& toggleFlag, int stage){
+    while (toggleFlag.load()) {
+        if (stage == 0) {
+            gravity_dir = {gravity_strength, 0.f};
+            stage = 1;
+            std::this_thread::sleep_for(std::chrono::milliseconds (600));
+
+        } else if( stage == 1){
+            gravity_dir = {0.0f, gravity_strength};
+            stage = 2;
+            std::this_thread::sleep_for(std::chrono::seconds (2));
+
+        }
+        else if ( stage == 2){
+            gravity_dir = {-gravity_strength, 0.0f};
+            stage = 3;
+            std::this_thread::sleep_for(std::chrono::milliseconds (600));
+
+        }
+        else if ( stage == 3){
+            gravity_dir = {0.0f, gravity_strength};
+            stage = 0;
+            std::this_thread::sleep_for(std::chrono::seconds (2));
+
+        }
+        gravity_dir = {gravity_dir.x , gravity_dir.y};
+    }
+}
 
 namespace rocket {
 	static std::default_random_engine generator;
 	static float CIRCLE_RADIUS = 0.010f;
     static float OBSTACLE_RADIUS = 0.2f;
-	TutorialApp::TutorialApp()
+    bool gravity_toggle = false;
+
+    TutorialApp::TutorialApp()
 	{
 		loadGameObjects();
 	}
@@ -30,8 +69,9 @@ namespace rocket {
 		std::cout << "Starting Tutorial App." << std::endl;
 		SimpleRenderSystem simpleRenderSystem(rocketDevice, rocketRenderer.getSwapChainRenderPass());
 
-		//uint32_t testBallPosition = createParticle({ 0.f, 0.f });
-		//gameObjects[testBallPosition].acceleration = glm::vec2(0.0f, 2.0f);
+        std::atomic<bool> toggleFlag{ false };
+        std::thread toggleThread;
+        int stage = 0;
 		while (!rocketWindow.shouldClose()) {
 			glfwPollEvents();
 
@@ -45,28 +85,70 @@ namespace rocket {
 				static int i = 1;
 				static int particleCounter = 0;
                 static int GRID_DIMENSION = 10;
+                static float FLIP_PERCENTAGE = 0.05f;
+                static float OVERRELAXATION = 2.0f;
+                static int FLUID_ITERATIONS = 20;
+                static int COLLISION_ITERATIONS = 2;
 
-				ImGui::Begin("Fps and slider!");                          // Create a window called "Hello, world!" and append into it.
+                ImGui::Begin("Simulation configuration and info!");
 
 
-				ImGui::SliderInt("Number of particles to add", &i,1, 20);            // Edit 1 float using a slider from 0.0f to 1.0f
+				ImGui::SliderInt("Number of particles to add", &i,1, 20);
+                if(ImGui::SliderInt("Number of iterations for fluid simulation", &FLUID_ITERATIONS,1, 20)){
+                    physicsSystem.setFluidIterationCount(FLUID_ITERATIONS);
+                }
+                if (ImGui::SliderFloat("FLIP percentage", &FLIP_PERCENTAGE, 0.0f, 1.10f)){
+                    physicsSystem.setFlipRatio(FLIP_PERCENTAGE);
+                }
+                ImGui::SliderFloat("Overrelaxation", &OVERRELAXATION, 0.0f, 2.00f);
+                ImGui::SliderInt("Collistion iterations", &COLLISION_ITERATIONS,1, 4);
+
 
                 if(ImGui::SliderInt("Grid dimension (NxN)", &GRID_DIMENSION, 1, 20)){
                     std::cout << "Grid dimension changed to " << GRID_DIMENSION << std::endl;
                     // physicsSystem.setGridDimension(GRID_DIMENSION);
                 }
 
-//				if (ImGui::SliderFloat("Particle radius", &CIRCLE_RADIUS, 0.0f, 0.1f)) {
-//					loadGameObjects();
+               if(ImGui::SliderFloat("Gravity strength", &gravity_strength, 0, 20)){
+                   glm::vec2 g = glm::vec2(0.0f, gravity_strength);
+                   physicsSystem.setGravity(g);
+                   gravity_dir = g;
+               }
+               else{
+                   physicsSystem.setGravity(gravity_dir);
+
+               }
+                    // physicsSystem.setGridDimension(GRID_DIMENSION);
+
+
+
+//				if (ImGui::Button("Flip Gravity")) {
+//
+//					glm::vec2 g = gravity_dir;
+//
+//					physicsSystem.setGravity(glm::vec2(g.y, g.x));
+//
 //				}
+                if (ImGui::Button("Toggle flipping gravity")) {
 
-				if (ImGui::Button("Flip Gravity")) {
+                    if (!gravity_toggle) {
+                        std::cout << "Toggle thread started" << std::endl;
+                        toggleFlag.store(true);
+                        toggleThread = std::thread(toggleGravityFlip, std::ref(toggleFlag), stage);
+                        gravity_toggle = true;
 
-					glm::vec2 g = physicsSystem.getGravity();
-					
-					physicsSystem.setGravity(glm::vec2(g.y, g.x));
-					
-				}                        // Buttons return true when clicked (most widgets return true when edited/activated)
+                    } else{
+                        std::cout << "Toggle thread stopped" << std::endl;
+                        toggleFlag.store(false);
+                        toggleThread.join();
+                        gravity_toggle = false;
+                        gravity_dir = {0.0f, gravity_strength};
+
+                    }
+
+
+                }
+
 				float mouseX = 2 * (ImGui::GetMousePos().x / WIDTH - 0.5f);
 				float mouseY = 2 * (ImGui::GetMousePos().y / HEIGHT - 0.5f);
 
@@ -94,7 +176,7 @@ namespace rocket {
                         std::cout << i << " Particle created" << std::endl;
                     }
                 }
-				ImGui::Text("counter = %d", particleCounter);
+				ImGui::Text("Number of particles = %d", particleCounter);
 
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
@@ -137,6 +219,11 @@ namespace rocket {
 				rocketRenderer.endFrame();
 			}
 		}
+        if (gravity_toggle) {
+            toggleFlag.store(false);
+            toggleThread.join();
+        }
+
 		vkDeviceWaitIdle(rocketDevice.device());
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -144,6 +231,7 @@ namespace rocket {
 		vkDeviceWaitIdle(rocketDevice.device());
 
 		vkDestroyDescriptorPool(rocketDevice.device(), rocketDevice.getDescriptorPool(), nullptr);
+
 
 
 	}
@@ -249,6 +337,8 @@ namespace rocket {
         //return std::make_unique<RocketGameObject>(gameObjects.back());
         return gameObjects.size() - 1;
     }
+
+
 
 
 

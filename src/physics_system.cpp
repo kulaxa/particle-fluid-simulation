@@ -37,10 +37,10 @@ namespace rocket {
       grid.updatePositionsFromObjectToGrid(gameObjects);
         grid.updateObstacleCellsToSolid(gameObjects);
 
-        grid.transferVelocities(true, 0.6f);
+        grid.transferVelocities(true, flip_ratio);
         grid.updateParticleDensity();
-        grid.solveIncompressibility(20, deltaTime, 1.9);
-        grid.transferVelocities(false, 0.6f);
+        grid.solveIncompressibility(fluid_iteration_count, deltaTime, 1.9);
+        grid.transferVelocities(false, flip_ratio);
 
         grid.updatePositionsFromGridToObject(gameObjects);
         grid.updateObstacleCellsToAir(gameObjects);
@@ -53,43 +53,23 @@ namespace rocket {
         for (auto &gameObject: gameObjects) {
 
             if (gameObject.gravityApplied) {
-                gameObject.acceleration = gravity * 0.001f;
-                //std::cout << "Object: " << gameObject.getId() << ", position " << gameObject.acceleration.y << std::endl;
+                gameObject.acceleration = gravity;
 
             }
             if(gameObject.type == rocket::RocketGameObjectType::OBSTACLE) {
                 gameObject.obstacleGridPositions.clear();
             }
 
-//            if(gameObject.transform2d.translation.x < -1.0f){
-//                gameObject.transform2d.translation.x = -1.0f;
-//            }
-//            if(gameObject.transform2d.translation.x > 1.0f){
-//                gameObject.transform2d.translation.x = 1.0f;
-//            }
-//            if(gameObject.transform2d.translation.y< -1.0f){
-//                gameObject.transform2d.translation.y = -1.0f;
-//            }
-//            if(gameObject.transform2d.translation.y > 1.0f){
-//                gameObject.transform2d.translation.y = 1.0f;
-//            }
-            gameObject.transform2d.translation += gameObject.acceleration * deltaTime;
-//            auto collisions = resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
-//            std::cout << "Collisions: " << collisions << std::endl;
-
-
-//            resolveCollisionWithOuterWalls(gameObject, deltaTime);
-
+//gameObject.transform2d.translation += gameObject.acceleration * deltaTime;
 
             glm::vec2 position = gameObject.transform2d.translation;
             glm::vec2 last_position = gameObject.last_position;
             const glm::vec2 last_update_move = position - last_position;
             const glm::vec2 new_position = position + last_update_move +
-                                           (gameObject.acceleration - last_update_move * 40.0f) *
+                                           (gameObject.acceleration - last_update_move * (1.0f/deltaTime)) *
                                            (deltaTime * deltaTime);
             gameObject.last_position = position;
             gameObject.transform2d.translation = new_position;
-            //gameObject.acceleration = {0.0f, 0.0f};
         }
 
     }

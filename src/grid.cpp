@@ -13,15 +13,7 @@ namespace  rocket {
             if(gameObject.type == RocketGameObjectType::OBSTACLE) {
 
                 for(auto &contained_cell: getContainedCellsForObstacle(gameObject)) {
-//                    if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
-//                        grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
-//                                                                                grid[gameObject.gridPosition].objects.end(),
-//                                                                                gameObject.getId()),
-//                                                                    grid[gameObject.gridPosition].objects.end());
-//                        grid[contained_cell].objects.push_back(gameObject.getId());
-//                    } else if (gameObject.gridPosition == -1) {
-//                        grid[contained_cell].objects.push_back(gameObject.getId());
-//                    }
+
                     gameObject.gridPosition = contained_cell;
                     gameObject.obstacleGridPositions.push_back(contained_cell);
                     grid[contained_cell].objects.push_back(gameObject.getId());
@@ -35,17 +27,7 @@ namespace  rocket {
                 gameObject.gridPosition = contained_cell;
                 grid[contained_cell].objects.push_back(gameObject.getId());
             }
-//            if (gameObject.gridPosition != -1 && gameObject.gridPosition != contained_cell) {
-//                grid[gameObject.gridPosition].objects.erase(std::remove(grid[gameObject.gridPosition].objects.begin(),
-//                                                                        grid[gameObject.gridPosition].objects.end(),
-//                                                                        gameObject.getId()),
-//                                                            grid[gameObject.gridPosition].objects.end());
-//                grid[contained_cell].objects.push_back(gameObject.getId());
-//            } else if (gameObject.gridPosition == -1) {
-//                grid[contained_cell].objects.push_back(gameObject.getId());
-//            }
-            //gameObject.gridPosition = contained_cell;
-            //grid[contained_cell].objects.push_back(gameObject.getId());
+
         }
     }
 
@@ -81,16 +63,23 @@ namespace  rocket {
         int xMax = std::min(gridWidth - 1, static_cast<int>(std::floor((x + R) * gridWidth / 2 + gridWidth / 2)));
         int yMax = std::min(gridHeight - 1, static_cast<int>(std::floor((y + R) * gridHeight / 2 + gridHeight / 2)));
 
+        if(xMin >= gridWidth){
+            xMin = gridWidth-1;
+        }
+        if(yMin >= gridHeight){
+            yMin = gridHeight-1;
+        }
+        if(xMax < 0){
+            xMax = 0;
+        }
+        if(yMax < 0){
+            yMax = 0;
+        }
         // Add all cells in the bounding box that are fully or partially covered by the circle
         std::vector<int> cellsContainingBall;
         for (int yIndex = yMin; yIndex <= yMax; ++yIndex) {
             for (int xIndex = xMin; xIndex <= xMax; ++xIndex) {
-//                double cellCenterX = -1.0 + (2.0 / gridWidth) * (xIndex + 0.5);
-//                double cellCenterY = -1.0 + (2.0 / gridHeight) * (yIndex + 0.5);
-//                double distance = std::sqrt((x - cellCenterX) * (x - cellCenterX) + (y - cellCenterY) * (y - cellCenterY));
-//                if (distance <= R) {
                     cellsContainingBall.push_back({yIndex * gridWidth + xIndex});
-//                }
             }
         }
 

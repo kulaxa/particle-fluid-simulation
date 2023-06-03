@@ -37,12 +37,13 @@ namespace rocket {
         uint32_t createMultipleParticles(glm::vec2 position, int count, float radius);
 		uint32_t getSelectedParticle(float xMouse, float yMouse, float offset);
 		uint32_t getParticleIndex(uint32_t particleId);
+       // void toggleGravityFlip(std::atomic<bool>& toggleFlag, bool flip);
 		void clearSimulation();
 		RocketWindow rocketWindow{ WIDTH, HEIGHT, "Rocket" };
 		RocketDevice rocketDevice{ rocketWindow };
 		RocketRenderer rocketRenderer{ rocketWindow, rocketDevice };
 		std::vector<RocketGameObject> gameObjects;
-		PhysicsSystem physicsSystem{ glm::vec2(0.0f, 9.8f) , 30};
+		PhysicsSystem physicsSystem{ glm::vec2(0.0f, 0.0f) , 30};
 		std::shared_ptr<RocketModel> circleModel = nullptr;
         std::shared_ptr<RocketModel> obstacleModel = nullptr;
         bool obstacleCreated = false;

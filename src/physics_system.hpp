@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <iostream>
 #include "particle.hpp"
 #include "grid.h"
 #include "physics_system.hpp"
@@ -34,7 +35,9 @@ namespace rocket {
         DebugInfo getDebugInfo();
 
 
-		void setGravity(glm::vec2 gravity) { this->gravity = gravity; }
+		void setGravity(glm::vec2 gravity) {this->gravity = gravity; }
+        void setFlipRatio(float flip_ratio) { this->flip_ratio = flip_ratio; }
+        void setFluidIterationCount(int fluid_iteration_count) { this->fluid_iteration_count = fluid_iteration_count; }
 		glm::vec2 getGravity() { return gravity; }
 
         void setGridDimension(int gridDimension) { grid = Grid(gridDimension, gridDimension); }
@@ -42,5 +45,7 @@ namespace rocket {
 		glm::vec2 gravity;
         Grid grid;
         DebugInfo debugInfo;
+        int fluid_iteration_count;
+        float flip_ratio;
 	};
 }
