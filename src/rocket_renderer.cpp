@@ -34,7 +34,6 @@ namespace rocket {
 			return nullptr;
 		}
 
-
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
@@ -43,7 +42,8 @@ namespace rocket {
 
 		auto commandBuffer = getCurrentCommandBuffer();
 
-		VkCommandBufferBeginInfo beginInfo{};
+
+        VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {

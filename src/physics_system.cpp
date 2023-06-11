@@ -1,150 +1,134 @@
 #include "physics_system.hpp"
 #include <iostream>
+#include <numeric>
+#include <algorithm>
+#include <chrono>
 
 namespace rocket {
-	PhysicsSystem::PhysicsSystem(glm::vec2 gravity): gravity(gravity)
-	{
+    PhysicsSystem::PhysicsSystem(glm::vec2 gravity, int gridDimension) : gravity(gravity) {
+        grid = Grid(gridDimension, gridDimension);
+    }
 
-	}
+    PhysicsSystem::~PhysicsSystem( ) {
+    }
 
-	PhysicsSystem::~PhysicsSystem()
-	{
-	}
+    void PhysicsSystem::updatePhysics(float deltaTime, std::vector<RocketGameObject> &gameObjects) {
+//        std::sort(gameObjects.begin(), gameObjects.end(), [](RocketGameObject &a, RocketGameObject &b) {
+//            return a.transform2d.translation.y < b.transform2d.translation.y;
+//        });
+//        std::chrono::high_resolution_clock::time_point start_time = std::chrono::high_resolution_clock::now();
 
-	void PhysicsSystem::updatePhysics(float deltaTime, std::vector<RocketGameObject>& gameObjects)
-	{
-		for (auto& gameObject : gameObjects) {
-			if (gameObject.gravityApplied && gameObject.total_force.y/ gameObject.mass < gravity.y) {
-				gameObject.total_force += gameObject.mass * gravity * deltaTime;
-			}
-			if (gameObject.collisionApplied && gameObject.type == RocketGameObjectType::PARTICLE) 
-			{
-				resolveCollisionWithOuterWalls(gameObject, deltaTime);
-				resolveCollisionWithOtherParticles(gameObject, gameObjects, deltaTime);
-			}
-			//std::cout << "total force: " << gameObject.total_force.x << " " << gameObject.total_force.y << std::endl;
-			gameObject.velocity +=  gameObject.total_force / gameObject.mass * deltaTime;
-			//std::cout << "velocity: " << gameObject.velocity.x << " " << gameObject.velocity.y << std::endl;
-			gameObject.transform2d.translation += gameObject.velocity * deltaTime;
-			//gameObject.gravityApplied = true;
-	
-		}
-	}
+        grid.updateGrid(gameObjects);
+//        std::chrono::high_resolution_clock::time_point end_time = std::chrono::high_resolution_clock::now();
+//        debugInfo.update_grid_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
-	void PhysicsSystem::resolveCollisionWithOuterWalls(RocketGameObject& gameObject, float deltaTime)
-	{
-		float stillForceTreshold = gameObject.mass;
-		float radius =  gameObject.radius;
-		glm::vec2 center = gameObject.transform2d.translation;
-		const float COLLISION_ENERGY_LOSS = 0.70f;
-		const float FRICTION = 0.7f;
-
-		 if (glm::abs(center.x) + radius >= 1.0f) {
-			//gameObject.velocity.x *= -COLLISION_ENERGY_LOSS;
-			float distance = glm::abs(gameObject.transform2d.translation.x) + radius - 1.0f;
-			if (center.x < 0.0f) {
-				gameObject.transform2d.translation.x += distance;
-			}
-			else {
-				gameObject.transform2d.translation.x -= distance;
-			}
-		}
-
-		 if (glm::abs(center.y) + radius >= 1.0f) {
-			 gameObject.velocity.y *= -COLLISION_ENERGY_LOSS;
-			 float distance = glm::abs(gameObject.transform2d.translation.y) + radius - 1.0f;
-			 if (center.y < 0.0f) {
-				 gameObject.transform2d.translation.y +=  distance;
-			 }
-			 else {
-				gameObject.transform2d.translation.y -=  distance;
-			 }
-			 if (glm::abs(gameObject.velocity.y) < 0.01f) {
-				 gameObject.gravityApplied = false;
-				 gameObject.velocity = { 0.0f , 0.0f };
-				 gameObject.total_force.y = 0.0f;
-			 }
-			 else {
-				 gameObject.gravityApplied  = true;
-			 }
-		}
-		
-	}
-
-	void PhysicsSystem::resolveCollisionWithOtherParticles(RocketGameObject& gameObject, std::vector<RocketGameObject>& gameObjects, float deltaTime)
-	{
-		float radius = gameObject.radius;
-		glm::vec2 center = gameObject.transform2d.translation;
-		float COLLISION_ENERGY_LOSS = 0.9f;
-		for (auto& particle : gameObjects) {
-			if (particle.getId() != gameObject.getId()) {
-				{
-					float otherRadius = particle.radius;
-					glm::vec2 otherCenter = particle.transform2d.translation;
-					if (glm::distance(center, otherCenter) <= radius + otherRadius) {
-
-						float distance = glm::distance(center, otherCenter);
-						float overlap = (distance - (radius + otherRadius));
-						glm::vec2 v1 = gameObject.velocity;
-						glm::vec2 v2 = particle.velocity;
-						float m1 = gameObject.mass;
-						float m2 = particle.mass;
-						if (!gameObject.gravityApplied && particle.gravityApplied) {
-							particle.transform2d.translation += overlap * (center - otherCenter) / distance;
-							particle.velocity.y *= -COLLISION_ENERGY_LOSS;
-						}
-						else if (!particle.gravityApplied && gameObject.gravityApplied) {
-							gameObject.transform2d.translation -= overlap * (center - otherCenter) / distance;
-							gameObject.velocity.y *= -COLLISION_ENERGY_LOSS;
-						}
-						else if (gameObject.gravityApplied && particle.gravityApplied) {
-							gameObject.transform2d.translation -= 0.5f * overlap * (center - otherCenter) / distance;
-							gameObject.velocity = (v1 - (2.0f * m2 / (m1 + m2)) * glm::dot(v1 - v2, center - otherCenter) / glm::dot(center - otherCenter, center - otherCenter) * (center - otherCenter));
-							gameObject.velocity *= COLLISION_ENERGY_LOSS;
-
-							particle.transform2d.translation += 0.5f * overlap * (center - otherCenter) / distance;
-							particle.velocity = (v2 - (2.0f * m1 / (m1 + m2)) * glm::dot(v2 - v1, otherCenter - center) / glm::dot(otherCenter - center, otherCenter - center) * (otherCenter - center));
-							particle.velocity *= COLLISION_ENERGY_LOSS;
-						}
-						else {
-							gameObject.transform2d.translation -= 0.5f * overlap * (center - otherCenter) / distance;
-							gameObject.velocity = (v1 - (2.0f * m2 / (m1 + m2)) * glm::dot(v1 - v2, center - otherCenter) / glm::dot(center - otherCenter, center - otherCenter) * (center - otherCenter));
-							gameObject.velocity *= COLLISION_ENERGY_LOSS;
-
-							particle.transform2d.translation += 0.5f * overlap * (center - otherCenter) / distance;
-							particle.velocity = (v2 - (2.0f * m1 / (m1 + m2)) * glm::dot(v2 - v1, otherCenter - center) / glm::dot(otherCenter - center, otherCenter - center) * (otherCenter - center));
-							particle.velocity *= COLLISION_ENERGY_LOSS;
-						}
-						if (!gameObject.gravityApplied || !particle.gravityApplied) {
-							if (glm::abs(gameObject.velocity.y) < 0.001f) {
-								gameObject.gravityApplied = false;
-								gameObject.velocity = { 0.0f , 0.0f };
-								gameObject.total_force.y = 0.0f;
-
-							}
-							else {
-								gameObject.gravityApplied = true;
-							}
-							if (glm::abs(particle.velocity.y) < 0.001f) {
-								particle.gravityApplied = false;
-								particle.velocity = { 0.0f , 0.0f };
-								particle.total_force.y = 0.0f;
-							}
-							else {
-								particle.gravityApplied = true;
-							}
-						}
-
-						return;
-					}
-				}
-			}
-		}
-		
-	}
+//        start_time = std::chrono::high_resolution_clock::now();
+//        end_time = std::chrono::high_resolution_clock::now();
+//        debugInfo.resolve_collisions_with_walls_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time-start_time);
 
 
+        //grid.clearResolvedCells();
+
+        if (fluid_physics_enabled) {
+
+            grid.updatePositionsFromObjectToGrid(gameObjects);
+            grid.updateObstacleCellsToSolid(gameObjects);
+
+            grid.transferVelocities(true, flip_ratio);
+            grid.updateParticleDensity();
+            grid.solveIncompressibility(fluid_iteration_count, deltaTime, 1.9);
+            grid.transferVelocities(false, flip_ratio);
+
+            grid.updatePositionsFromGridToObject(gameObjects);
+            grid.updateObstacleCellsToAir(gameObjects);
+        }
+
+        for (int i = 0; i < collision_iteration_count; ++i) {
+            grid.resolveCollisionsWithWalls(gameObjects);
+
+            grid.resolveCollisions(gameObjects);
+            grid.clearResolvedCells();
+        }
+
+        grid.resolveCollisions(gameObjects);
 
 
+        //        start_time = std::chrono::high_resolution_clock::now();
 
+//
+//
+
+        for (auto &gameObject: gameObjects) {
+
+            if (gameObject.gravityApplied) {
+                gameObject.acceleration = gravity;
+            }
+
+            glm::vec2 position = gameObject.transform2d.translation;
+            glm::vec2 last_position = gameObject.last_position;
+            const glm::vec2 last_update_move = position - last_position;
+            const glm::vec2 new_position = position + last_update_move +
+                                           (gameObject.acceleration - last_update_move * (1.0f/deltaTime)) *
+                                           (deltaTime * deltaTime);
+            gameObject.last_position = position;
+            gameObject.transform2d.translation = new_position;
+        }
+
+    }
+
+    void PhysicsSystem::resolveCollisionWithOuterWalls(RocketGameObject &gameObject, float deltaTime) {
+        float radius = gameObject.radius;
+        float margin = 0.001f;
+        glm::vec2 center = gameObject.transform2d.translation;
+
+        if (glm::abs(center.x) + radius >= 1.0f - margin) {
+            float distance = glm::abs(gameObject.transform2d.translation.x) + radius - 1.0f +margin;
+            if (center.x < 0.0f) {
+                gameObject.transform2d.translation.x += distance;
+            } else {
+                gameObject.transform2d.translation.x -= distance;
+            }
+        }
+        if (glm::abs(center.y) + radius >= 1.0f - margin) {
+            float distance = glm::abs(gameObject.transform2d.translation.y) + radius - 1.0f +margin;
+            if (center.y < 0.0f) {
+                gameObject.transform2d.translation.y += distance;
+            } else {
+                gameObject.transform2d.translation.y -= distance;
+            }
+        }
+
+    }
+
+    uint32_t PhysicsSystem::resolveCollisionWithOtherParticles(RocketGameObject &gameObject,
+                                                           std::vector<RocketGameObject> &gameObjects,
+                                                           float deltaTime) {
+        uint32_t collisions = 0;
+        for (auto &particle: gameObjects) {
+
+            collisions++;
+            constexpr float response_coef = 1.1f;
+            constexpr float eps = 0.0001f;
+            const glm::vec2 o2_o1 = gameObject.transform2d.translation - particle.transform2d.translation;
+            const float dist2 = o2_o1.x * o2_o1.x + o2_o1.y * o2_o1.y;
+            const float dinstace_minus_radius = dist2 - glm::pow(gameObject.radius + particle.radius, 2);
+            if (dinstace_minus_radius < 0.0f && dist2 > eps) {
+                const float dist = sqrt(dist2);
+                // Radius are all equal to 1.0f
+                const float delta = response_coef * 0.5f * (gameObject.radius + particle.radius - dist);
+                const glm::vec2 col_vec = (o2_o1 / dist) * delta;
+                    gameObject.transform2d.translation += col_vec;
+                    particle.transform2d.translation -= col_vec;
+            }
+        }
+        return collisions;
+
+    }
+
+
+    DebugInfo PhysicsSystem::getDebugInfo() {
+        debugInfo.averageCellObjectCount = grid.getAverageCellObjectCount();
+        debugInfo.filledCellCount = grid.getFilledCellCount();
+        return debugInfo;
+    }
 }

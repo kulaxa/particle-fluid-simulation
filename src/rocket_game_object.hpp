@@ -7,7 +7,8 @@
 namespace rocket {
 	enum class RocketGameObjectType {
 		NONE,
-		PARTICLE
+		PARTICLE,
+        OBSTACLE
 	};
 
 	struct Transform2dComponent {
@@ -53,14 +54,14 @@ namespace rocket {
 		glm::vec3 color{};
 		Transform2dComponent transform2d{};
 		bool gravityApplied = false;
-		bool collisionApplied = false;
 		float radius = 0.0f;
-		float touchingFloor = false;
 		RocketGameObjectType type = RocketGameObjectType::NONE;
-		float mass = 0.0f;
-		glm::vec2 velocity = glm::zero<glm::vec2>();
 		glm::vec2 acceleration = glm::zero<glm::vec2>();
-		glm::vec2 total_force = glm::zero<glm::vec2>();
+        glm::vec2 last_position = glm::zero<glm::vec2>();
+        uint32_t gridPosition = -1;
+        std::vector<int> gridPositions{};
+        std::vector<int> obstacleGridPositions{};
+        glm::vec2 velocity = glm::zero<glm::vec2>();
 
 	private:
 		RocketGameObject(id_t objId) : id{ objId } {}
