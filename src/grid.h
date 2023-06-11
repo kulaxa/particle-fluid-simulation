@@ -189,7 +189,7 @@ namespace rocket{
         void setParticleCount(int count){ numParticles = count; };
         std::vector<int> getContainedCellsForObstacle(RocketGameObject &gameObject);
 
-
+        glm::vec2 getGridDimensions(){ return glm::vec2(grid_width, grid_height); };
 
             void transferVelocities(bool toGrid,float flipRatio);
         void printGrid();

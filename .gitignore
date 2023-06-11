@@ -493,6 +493,9 @@ _deps
 
 
 # Executable
-rocket
+rocket*
 imgui.ini
 libimgui.a
+
+
+venv

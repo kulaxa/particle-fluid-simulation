@@ -18,9 +18,12 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <fstream>
+#include <map>
 
 float gravity_strength = 2.f;
 glm::vec2 gravity_dir = {0.0f, gravity_strength};
+
 
 void toggleGravityFlip(std::atomic<bool>& toggleFlag, int stage){
     while (toggleFlag.load()) {
@@ -66,6 +69,11 @@ namespace rocket {
 	}
 	void TutorialApp::run()
 	{
+        std::ofstream outputFile("results.txt");
+        int frame_counter = 0;
+        int particle_counter = 0;
+        float average_fps_particle = 0.0f;
+        std::map <int, float> particle_fps = {};
 		std::cout << "Starting Tutorial App." << std::endl;
 		SimpleRenderSystem simpleRenderSystem(rocketDevice, rocketRenderer.getSwapChainRenderPass());
 
@@ -84,11 +92,11 @@ namespace rocket {
 			{
 				static int i = 1;
 				static int particleCounter = 0;
-                static int GRID_DIMENSION = 10;
+                static int GRID_DIMENSION = 20;
                 static float FLIP_PERCENTAGE = 0.05f;
                 static float OVERRELAXATION = 2.0f;
                 static int FLUID_ITERATIONS = 20;
-                static int COLLISION_ITERATIONS = 2;
+                static int COLLISION_ITERATIONS = 1;
 
                 ImGui::Begin("Simulation configuration and info!");
 
@@ -101,7 +109,9 @@ namespace rocket {
                     physicsSystem.setFlipRatio(FLIP_PERCENTAGE);
                 }
                 ImGui::SliderFloat("Overrelaxation", &OVERRELAXATION, 0.0f, 2.00f);
-                ImGui::SliderInt("Collistion iterations", &COLLISION_ITERATIONS,1, 4);
+                if(ImGui::SliderInt("Collistion iterations", &COLLISION_ITERATIONS,0, 5)){
+                    physicsSystem.setCollisionIterationCount(COLLISION_ITERATIONS);
+                }
 
 
                 if(ImGui::SliderInt("Grid dimension (NxN)", &GRID_DIMENSION, 1, 20)){
@@ -182,11 +192,25 @@ namespace rocket {
                         std::cout << i << " Particle created" << std::endl;
                     }
                 }
+                float FPS = ImGui::GetIO().Framerate;
+                if (particleCounter == particle_counter){
+                    frame_counter++;
+                    average_fps_particle += FPS;
+                }
+                else{
+                    particle_fps[particle_counter] = average_fps_particle / frame_counter;
+                    frame_counter = 0;
+                    average_fps_particle = 0.0f;
+                    particle_counter = particleCounter;
+                }
+
 				ImGui::Text("Number of particles = %d", particleCounter);
 
-				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / FPS, FPS);
 				ImGui::Text("Mouse position is %.3f x, %0.3f y", mouseX, mouseY);
                 ImGui::Text("Fluid simulation enabled: %s", physicsSystem.isFluidPhysicsEnabled() ? "true" : "false");
+
+
 				//uint32_t selectedParticle = getSelectedParticle(mouseX, mouseY, 0.0f);
 				//if (selectedParticle != -1) {
                   //  ImGui::Text("[Obstacle grid position] lastPosition %d, number of gridCells %d", gameObjects[getParticleIndex(selectedParticle)].gridPosition, gameObjects[getParticleIndex(selectedParticle)].obstacleGridPositions.size());
@@ -239,7 +263,19 @@ namespace rocket {
 
 		vkDestroyDescriptorPool(rocketDevice.device(), rocketDevice.getDescriptorPool(), nullptr);
 
+        // print fps
 
+        if (outputFile.is_open()) { // Check if the file was opened successfully
+            //outputFile << "Particle FPS" << std::endl;
+            outputFile << "Grid Size: "<< physicsSystem.getGridDimension().x << std::endl;
+            for (int i = 0; i < particle_fps.size(); i++){
+                outputFile << i  << " : "<< particle_fps[i] << std::endl;
+            }
+            //  outputFile.close(); // Close the file
+            // std::cout << "Data has been written to the file." << std::endl;
+        } else {
+            std::cout << "Failed to open the file." << std::endl;
+        }
 
 	}
 

@@ -28,12 +28,7 @@ namespace rocket {
 
 
         //grid.clearResolvedCells();
-        grid.resolveCollisionsWithWalls(gameObjects);
 
-        grid.resolveCollisions(gameObjects);
-        grid.clearResolvedCells();
-
-        grid.resolveCollisions(gameObjects);
         if (fluid_physics_enabled) {
 
             grid.updatePositionsFromObjectToGrid(gameObjects);
@@ -47,6 +42,16 @@ namespace rocket {
             grid.updatePositionsFromGridToObject(gameObjects);
             grid.updateObstacleCellsToAir(gameObjects);
         }
+
+        for (int i = 0; i < collision_iteration_count; ++i) {
+            grid.resolveCollisionsWithWalls(gameObjects);
+
+            grid.resolveCollisions(gameObjects);
+            grid.clearResolvedCells();
+        }
+
+        grid.resolveCollisions(gameObjects);
+
 
         //        start_time = std::chrono::high_resolution_clock::now();
 
